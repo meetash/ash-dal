@@ -7,25 +7,11 @@ jobs:
   unitTests:
     runs-on: ubuntu-latest
     name: Unit Tests
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: emr
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
-          MYSQL_ROOT_PASSWORD: testpassword
-        ports:
-          - 3306:3306
     env:
       COVERAGE_SINGLE: 85
       COVERAGE_TOTAL: 90
       PULL_NUMBER: ${{ github.event.pull_request.number }}
       COMMIT_URL: "https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}/commits/${{ github.event.after }}"
-      DB__HOST: 127.0.0.1
-      DB__NAME: emr
-      DB__USER: root
-      DB__PASSWORD: testpassword
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -34,7 +20,7 @@ jobs:
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
-          pytest-root-dir: src/
+          pytest-root-dir: .
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
           async-tests: true

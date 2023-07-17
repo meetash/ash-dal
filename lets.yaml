@@ -5,7 +5,7 @@ env:
   CYAN: '\033[0;36m'
   YELLOW: '\033[0;33m'
   CLEAR: '\033[0m'
-  SRC_PATH: './src'
+  SRC_PATH: '.'
 
 commands:
 
