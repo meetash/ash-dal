@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "ash-dal"
+version = "0.1.0"
+description = ""
+authors = ["Dmitry Marchuk <dmarchuk@remedypointsolutions.com>"]
+readme = "README.md"
+packages = [{include = "ash_dal"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+SQLAlchemy = "^2.0.19"
+pymysql = "^1.1.0"
+aiomysql = "^0.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1.317"
+black = "^23.7.0"
+ruff = "^0.0.278"
+pytest = "^7.4.0"
+safety = "^2.3.5"
+pytest-cov = "^4.1.0"
+ipython = "^8.14.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

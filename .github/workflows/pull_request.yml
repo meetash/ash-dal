@@ -1,0 +1,12 @@
+name: Pull Request Pipeline
+on:
+  pull_request:
+
+jobs:
+  validation:
+    name: Code Validation
+    uses: './.github/workflows/validate_code.yml'
+  tests:
+    name: Unit Tests
+    needs: validation
+    uses: './.github/workflows/tests.yml'
