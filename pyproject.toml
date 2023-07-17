@@ -24,3 +24,23 @@ ipython = "^8.14.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+line-length = 120
+src = ["src"]
+extend-select = [
+    "I",
+    "F",
+    "N",
+    "UP",
+]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+ignore = [
+    "tests/*"
+]
+
+[tool.black]
+line-length = 120
