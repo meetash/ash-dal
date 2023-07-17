@@ -1,0 +1,2 @@
+class DALError(Exception):
+    pass
