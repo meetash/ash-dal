@@ -9,21 +9,29 @@ from ash_dal.exceptions.database import DBConnectionError
 
 class AsyncDatabase:
     _engine: AsyncEngine
+    _ro_engine: AsyncEngine | None
     _session_maker: t.Callable[[], AsyncSession]
 
     def __init__(
         self,
         db_url: URL,
-        read_replica_url: URL | None = None,
         ssl_context: ssl.SSLContext | None = None,
+        read_replica_url: URL | None = None,
+        read_replica_ssl_context: ssl.SSLContext | None = None,
     ):
         self.db_url = db_url
         self.read_replica_url = read_replica_url
         self._ssl_context = ssl_context
+        self._read_replica_ssl_context = read_replica_ssl_context
 
     @property
     def engine(self) -> AsyncEngine:
         assert getattr(self, "_engine", None)
+        return self._engine
+
+    @property
+    def read_only_engine(self) -> AsyncEngine:
+        assert getattr(self, "_ro_engine", None)
         return self._engine
 
     @property
@@ -32,7 +40,10 @@ class AsyncDatabase:
         return self._session_maker
 
     async def connect(self):
-        self._engine = self._create_engine()
+        self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
+        if self.read_replica_url:
+            self._ro_engine = self._create_engine(url=self.read_replica_url, ssl_context=self._read_replica_ssl_context)
+        # TODO: Implement a custom session class that will route queries between main and read replicas
         self._session_maker = async_sessionmaker(self.engine, expire_on_commit=False)
 
     async def disconnect(self):
@@ -42,11 +53,12 @@ class AsyncDatabase:
     def session(self) -> AsyncSession:
         return self.session_maker()  # pyright: ignore [ reportOptionalCall ]
 
-    def _create_engine(self) -> AsyncEngine:
-        connect_args = {"ssl": self._ssl_context} if self._ssl_context else {}
+    @staticmethod
+    def _create_engine(url: URL, ssl_context: ssl.SSLContext | None) -> AsyncEngine:
+        connect_args = {"ssl": ssl_context} if ssl_context else {}
         try:
             engine = create_async_engine(
-                self.db_url,
+                url,
                 connect_args=connect_args,
                 pool_pre_ping=True,
             )
