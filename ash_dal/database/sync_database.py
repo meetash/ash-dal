@@ -47,7 +47,8 @@ class Database:
         self._session_maker = sessionmaker(self.engine, expire_on_commit=False)
 
     def disconnect(self):
-        self.engine.dispose() if self.engine else ...
+        self.engine.dispose() if self._engine else ...
+        self.read_only_engine.dispose() if self._ro_engine else ...
 
     @property
     def session(self) -> Session:

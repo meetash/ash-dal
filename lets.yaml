@@ -31,3 +31,15 @@ commands:
     description: Run project tests
     cmd: |
       pytest --cov=${SRC_PATH} --color=yes "${LETS_COMMAND_ARGS}"
+
+  up-dbs:
+    description: Run Master and slave DBs in docker
+    cmd: |
+      docker compose up -d
+      sleep 10;
+      . ./docker_files/setup_db.sh
+
+  prune:
+    description: Prune test environment
+    cmd: |
+      docker compose down -v
