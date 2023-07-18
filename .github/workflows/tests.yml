@@ -40,7 +40,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11.4
-      - id: Configure slave
+      - id: configure-slave
+        name: Configure DB slave
         run: |
           sh ./docker_files/setup_db.sh
       - id: run-tests
