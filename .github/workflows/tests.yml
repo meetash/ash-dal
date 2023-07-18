@@ -12,27 +12,30 @@ jobs:
       COVERAGE_TOTAL: 90
       PULL_NUMBER: ${{ github.event.pull_request.number }}
       COMMIT_URL: "https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}/commits/${{ github.event.after }}"
+      DB_NAME: "my_db"
+      DB_USER: "my_db_user"
+      DB_PASSWORD: "S3cret"
     services:
       mysql:
         image: mysql:8.0
         volumes:
-          - ./docker_files/master.cnf:/etc/my.cnf
+          - ${{ github.workspace }}/docker_files/master.cnf:/etc/my.cnf
         env:
-          MYSQL_DATABASE: my_db
-          MYSQL_USER: my_db_user
-          MYSQL_PASSWORD: S3cret
-          MYSQL_ROOT_PASSWORD: S3cret
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+          MYSQL_USER: ${{ env.DB_USER }}
+          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
         ports:
           - 3306:3306
       mysql_slave:
         image: mysql:8.0
         volumes:
-          - ./docker_files/slave.cnf:/etc/my.cnf
+          - ${{ github.workspace }}/docker_files/slave.cnf:/etc/my.cnf
         env:
-          MYSQL_DATABASE: my_db
-          MYSQL_USER: my_db_user
-          MYSQL_PASSWORD: S3cret
-          MYSQL_ROOT_PASSWORD: S3cret
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+          MYSQL_USER: ${{ env.DB_USER }}
+          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
         ports:
           - 3307:3306
     steps:
@@ -43,7 +46,7 @@ jobs:
       - id: configure-slave
         name: Configure DB slave
         run: |
-          sh ./docker_files/setup_db.sh
+          sh docker_files/setup_db.sh
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
