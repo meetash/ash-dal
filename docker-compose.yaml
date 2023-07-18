@@ -7,7 +7,6 @@ services:
     ports:
       - "3306:3306"
     volumes:
-#      - ./mysql/data_master:/var/lib/mysql
       - ./docker_files/master.cnf:/etc/my.cnf
     environment:
       - MYSQL_ROOT_PASSWORD=S3cret

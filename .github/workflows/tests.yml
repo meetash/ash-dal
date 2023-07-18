@@ -12,11 +12,37 @@ jobs:
       COVERAGE_TOTAL: 90
       PULL_NUMBER: ${{ github.event.pull_request.number }}
       COMMIT_URL: "https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}/commits/${{ github.event.after }}"
+    services:
+      mysql:
+        image: mysql:8.0
+        volumes:
+          - ./docker_files/master.cnf:/etc/my.cnf
+        env:
+          MYSQL_DATABASE: my_db
+          MYSQL_USER: my_db_user
+          MYSQL_PASSWORD: S3cret
+          MYSQL_ROOT_PASSWORD: S3cret
+        ports:
+          - 3306:3306
+      mysql_slave:
+        image: mysql:8.0
+        volumes:
+          - ./docker_files/slave.cnf:/etc/my.cnf
+        env:
+          MYSQL_DATABASE: my_db
+          MYSQL_USER: my_db_user
+          MYSQL_PASSWORD: S3cret
+          MYSQL_ROOT_PASSWORD: S3cret
+        ports:
+          - 3307:3306
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11.4
+      - id: Configure slave
+        run: |
+          sh ./docker_files/setup_db.sh
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
