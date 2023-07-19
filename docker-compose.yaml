@@ -24,7 +24,6 @@ services:
     ports:
       - 3307:3306
     volumes:
-#      - ./mysql/data_slave:/var/lib/mysql
       - ./docker_files/slave.cnf:/etc/my.cnf
     environment:
       - MYSQL_ROOT_PASSWORD=S3cret
@@ -35,6 +34,3 @@ services:
       - mynetwork
 networks:
   mynetwork:
-#volumes:
-#  mysqldata_master:
-#  mysqldata_slave:
