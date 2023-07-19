@@ -154,3 +154,7 @@ cython_debug/
 
 .idea/
 .python-version
+mysql/
+log/
+.ruff_cache/
+.lets/

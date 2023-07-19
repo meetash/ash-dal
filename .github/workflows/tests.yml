@@ -17,6 +17,13 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11.4
+      - name: Install Lets
+        uses: lets-cli/lets-action@v1.1
+        with:
+          version: "v0.0.50"
+      - id: create-databases
+        run: |
+          lets up-dbs
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
