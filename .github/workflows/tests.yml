@@ -12,41 +12,18 @@ jobs:
       COVERAGE_TOTAL: 90
       PULL_NUMBER: ${{ github.event.pull_request.number }}
       COMMIT_URL: "https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}/commits/${{ github.event.after }}"
-      DB_NAME: "my_db"
-      DB_USER: "my_db_user"
-      DB_PASSWORD: "S3cret"
-    services:
-      mysql:
-        image: mysql:8.0
-        volumes:
-          - ${{ github.workspace }}/docker_files/master.cnf:/etc/my.cnf
-        env:
-          MYSQL_DATABASE: ${{ env.DB_NAME }}
-          MYSQL_USER: ${{ env.DB_USER }}
-          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
-        ports:
-          - 3306:3306
-      mysql_slave:
-        image: mysql:8.0
-        volumes:
-          - ${{ github.workspace }}/docker_files/slave.cnf:/etc/my.cnf
-        env:
-          MYSQL_DATABASE: ${{ env.DB_NAME }}
-          MYSQL_USER: ${{ env.DB_USER }}
-          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
-        ports:
-          - 3307:3306
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11.4
-      - id: configure-slave
-        name: Configure DB slave
+      - name: Install Lets
+        uses: lets-cli/lets-action@v1.1
+        with:
+          version: "v0.0.50"
+      - id: create-databases
         run: |
-          sh docker_files/setup_db.sh
+          lets up-dbs
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
