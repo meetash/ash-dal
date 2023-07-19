@@ -8,7 +8,7 @@ def prepare_ssl_context(
     server_ca_path: str | Path,
     ssl_root_dir: str | Path | None = None,
 ) -> ssl.SSLContext:
-    ssl_context = ssl.SSLContext()
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     if ssl_root_dir:
         client_cert_path = Path(ssl_root_dir, client_cert_path)
         client_key_path = Path(ssl_root_dir, client_key_path)
