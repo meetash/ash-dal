@@ -43,7 +43,8 @@ class Database:
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
         if self.read_replica_url:
             self._ro_engine = self._create_engine(url=self.read_replica_url, ssl_context=self._read_replica_ssl_context)
-        # TODO: Implement a custom session class that will route queries between main and read replicas
+        # TODO: Implement a custom session class that will route queries between main and read replicas.
+        # get_bind method of Session class
         self._session_maker = sessionmaker(self.engine, expire_on_commit=False)
 
     def disconnect(self):
