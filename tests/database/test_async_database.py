@@ -3,7 +3,7 @@ from unittest import IsolatedAsyncioTestCase
 import pytest
 from ash_dal.database.async_database import AsyncDatabase
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, text, select
+from sqlalchemy import URL, select, text
 
 
 class CreateSyncDatabaseTestCase(IsolatedAsyncioTestCase):

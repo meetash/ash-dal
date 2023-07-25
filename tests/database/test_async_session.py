@@ -1,11 +1,10 @@
-from unittest import TestCase, IsolatedAsyncioTestCase
-from unittest.mock import MagicMock, AsyncMock
+from unittest import IsolatedAsyncioTestCase
+from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy.exc import UnboundExecutionError
-
 from ash_dal.database import AsyncDatabase
-from sqlalchemy import URL, text, select, insert, Table, MetaData, Column, Integer, String, delete
+from sqlalchemy import URL, Column, Integer, MetaData, String, Table, insert, select, text
+from sqlalchemy.exc import UnboundExecutionError
 
 
 class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
@@ -33,7 +32,7 @@ class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
         self.metadata = MetaData()
         await self.db.connect()
         self.test_table = Table(
-            'users',
+            "users",
             self.metadata,
             Column("id", Integer, primary_key=True),
             Column("name", String(30)),
@@ -49,7 +48,7 @@ class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
             assert r.scalar() == 1
 
     async def test_async_session__insert_and_select(self):
-        id_, name, fullname = 1, 'John', 'John Doe'
+        id_, name, fullname = 1, "John", "John Doe"
         async with self.db.session as session:
             await session.execute(insert(self.test_table).values(id=id_, name=name, fullname=fullname))
             await session.commit()
@@ -64,10 +63,10 @@ class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
         slave_engine.connect.return_value.execute.return_value.context._is_server_side = None
         master_engine = MagicMock()
         master_engine.connect.return_value.execute.return_value.context._is_server_side = None
-        id_, name, fullname = 1, 'John', 'John Doe'
+        id_, name, fullname = 1, "John", "John Doe"
         async with self.db.session as session:
-            session.info['master'] = master_engine
-            session.info['slave'] = slave_engine
+            session.info["master"] = master_engine
+            session.info["slave"] = slave_engine
             insert_response = await session.execute(
                 insert(self.test_table).values(id=id_, name=name, fullname=fullname)
             )
@@ -79,7 +78,7 @@ class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
 
     async def test_async_session__insert_and_select_no_engines(self):
         async with self.db.session as session:
-            session.info['master'] = None
-            session.info['slave'] = None
+            session.info["master"] = None
+            session.info["slave"] = None
             with pytest.raises(UnboundExecutionError):
-                await session.execute(select(text('1')))
+                await session.execute(select(text("1")))

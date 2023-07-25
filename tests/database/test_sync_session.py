@@ -2,11 +2,9 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy.exc import UnboundExecutionError
-
 from ash_dal.database.sync_database import Database
-from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, text, select, insert, Table, MetaData, Column, Integer, String, delete
+from sqlalchemy import URL, Column, Integer, MetaData, String, Table, delete, insert, select, text
+from sqlalchemy.exc import UnboundExecutionError
 
 
 class CreateSyncSessionTestCase(TestCase):
@@ -34,7 +32,7 @@ class CreateSyncSessionTestCase(TestCase):
         self.metadata = MetaData()
         self.db.connect()
         self.test_table = Table(
-            'users',
+            "users",
             self.metadata,
             Column("id", Integer, primary_key=True),
             Column("name", String(30)),
@@ -54,7 +52,7 @@ class CreateSyncSessionTestCase(TestCase):
             assert r.scalar() == 1
 
     def test_sync_session__insert_and_select(self):
-        id_, name, fullname = 1, 'John', 'John Doe'
+        id_, name, fullname = 1, "John", "John Doe"
         with self.db.session as session:
             session.execute(insert(self.test_table).values(id=id_, name=name, fullname=fullname))
             session.commit()
@@ -66,10 +64,10 @@ class CreateSyncSessionTestCase(TestCase):
     def test_sync_session__insert_and_select_mocked(self):
         slave_engine = MagicMock()
         master_engine = MagicMock()
-        id_, name, fullname = 1, 'John', 'John Doe'
+        id_, name, fullname = 1, "John", "John Doe"
         with self.db.session as session:
-            session.info['master'] = master_engine
-            session.info['slave'] = slave_engine
+            session.info["master"] = master_engine
+            session.info["slave"] = slave_engine
             insert_response = session.execute(insert(self.test_table).values(id=id_, name=name, fullname=fullname))
             session.commit()
             assert insert_response == master_engine.connect.return_value.execute.return_value
@@ -78,7 +76,7 @@ class CreateSyncSessionTestCase(TestCase):
 
     def test_sync_session__insert_and_select_no_engines(self):
         with self.db.session as session:
-            session.info['master'] = None
-            session.info['slave'] = None
+            session.info["master"] = None
+            session.info["slave"] = None
             with pytest.raises(UnboundExecutionError):
-                session.execute(select(text('1'))).scalar()
+                session.execute(select(text("1"))).scalar()

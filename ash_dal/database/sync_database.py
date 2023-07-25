@@ -1,8 +1,8 @@
 import ssl
-import typing as t
 
 from sqlalchemy import URL, Engine, create_engine
 from sqlalchemy.orm import sessionmaker
+
 from ash_dal.database.sync_session import Session
 from ash_dal.exceptions.database import DBConnectionError
 
@@ -46,12 +46,7 @@ class Database:
         # TODO: Implement a custom session class that will route queries between main and read replicas.
         # get_bind method of Session class
         self._session_maker = sessionmaker(
-            class_=Session,
-            expire_on_commit=False,
-            info={
-                'master': self._engine,
-                'slave': self._ro_engine
-            }
+            class_=Session, expire_on_commit=False, info={"master": self._engine, "slave": self._ro_engine}
         )
 
     def disconnect(self):

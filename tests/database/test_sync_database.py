@@ -3,7 +3,7 @@ from unittest import TestCase
 import pytest
 from ash_dal.database.sync_database import Database
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, text, select
+from sqlalchemy import URL, select, text
 
 
 class CreateSyncDatabaseTestCase(TestCase):

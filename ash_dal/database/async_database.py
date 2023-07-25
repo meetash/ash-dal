@@ -1,5 +1,4 @@
 import ssl
-import typing as t
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -42,15 +41,14 @@ class AsyncDatabase:
 
     async def connect(self):
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
+        slave_sync_engine = None
         if self.read_replica_url:
             self._ro_engine = self._create_engine(url=self.read_replica_url, ssl_context=self._read_replica_ssl_context)
+            slave_sync_engine = self._ro_engine.sync_engine  # pyright: ignore [reportMissingParameterType]
         self._session_maker = async_sessionmaker(
             expire_on_commit=False,
             sync_session_class=Session,
-            info={
-                'master': self._engine.sync_engine,
-                'slave': self._ro_engine.sync_engine
-            }
+            info={"master": self._engine.sync_engine, "slave": slave_sync_engine},
         )
 
     async def disconnect(self):
