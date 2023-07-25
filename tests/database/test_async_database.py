@@ -3,7 +3,7 @@ from unittest import IsolatedAsyncioTestCase
 import pytest
 from ash_dal.database.async_database import AsyncDatabase
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, text
+from sqlalchemy import URL, text, select
 
 
 class CreateSyncDatabaseTestCase(IsolatedAsyncioTestCase):
@@ -52,6 +52,6 @@ class CreateSyncDatabaseTestCase(IsolatedAsyncioTestCase):
         )
         await db.connect()
         async with db.session as session:
-            r = await session.execute(text("SELECT 1;"))
+            r = await session.execute(select(text("1")))
             assert r.scalar() == 1
         await db.disconnect()

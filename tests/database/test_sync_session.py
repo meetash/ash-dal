@@ -47,14 +47,13 @@ class CreateSyncSessionTestCase(TestCase):
             for tbl in reversed(self.metadata.sorted_tables):
                 connection.execute(delete(tbl))
                 connection.commit()
-            self.db.engine.dispose()
 
-    def test_create_sync_database__select(self):
+    def test_sync_session__select(self):
         with self.db.session as session:
             r = session.execute(select(text("1")))
             assert r.scalar() == 1
 
-    def test_create_sync_database__insert_and_select(self):
+    def test_sync_session__insert_and_select(self):
         id_, name, fullname = 1, 'John', 'John Doe'
         with self.db.session as session:
             session.execute(insert(self.test_table).values(id=id_, name=name, fullname=fullname))
@@ -64,7 +63,7 @@ class CreateSyncSessionTestCase(TestCase):
             assert r.id == id_
             assert r.name == name
 
-    def test_create_sync_database__insert_and_select_mocked(self):
+    def test_sync_session__insert_and_select_mocked(self):
         slave_engine = MagicMock()
         master_engine = MagicMock()
         id_, name, fullname = 1, 'John', 'John Doe'
@@ -73,12 +72,11 @@ class CreateSyncSessionTestCase(TestCase):
             session.info['slave'] = slave_engine
             insert_response = session.execute(insert(self.test_table).values(id=id_, name=name, fullname=fullname))
             session.commit()
-            select_response = session.execute(select(self.test_table).where(self.test_table.c.id == 1)).first()
             assert insert_response == master_engine.connect.return_value.execute.return_value
+            select_response = session.execute(select(self.test_table).where(self.test_table.c.id == 1)).first()
             assert select_response == slave_engine.connect.return_value.execute.return_value.first.return_value
 
-    def test_create_sync_database__insert_and_select_no_engines(self):
-        id_, name, fullname = 1, 'John', 'John Doe'
+    def test_sync_session__insert_and_select_no_engines(self):
         with self.db.session as session:
             session.info['master'] = None
             session.info['slave'] = None

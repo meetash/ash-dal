@@ -4,13 +4,14 @@ import typing as t
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
+from ash_dal.database.sync_session import Session
 from ash_dal.exceptions.database import DBConnectionError
 
 
 class AsyncDatabase:
     _engine: AsyncEngine
     _ro_engine: AsyncEngine | None
-    _session_maker: t.Callable[[], AsyncSession]
+    _session_maker: async_sessionmaker[AsyncSession]
 
     def __init__(
         self,
@@ -35,7 +36,7 @@ class AsyncDatabase:
         return self._engine
 
     @property
-    def session_maker(self) -> t.Callable[[], AsyncSession]:
+    def session_maker(self) -> async_sessionmaker[AsyncSession]:
         assert getattr(self, "_session_maker", None)
         return self._session_maker
 
@@ -43,8 +44,14 @@ class AsyncDatabase:
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
         if self.read_replica_url:
             self._ro_engine = self._create_engine(url=self.read_replica_url, ssl_context=self._read_replica_ssl_context)
-        # TODO: Implement a custom session class that will route queries between main and read replicas
-        self._session_maker = async_sessionmaker(self.engine, expire_on_commit=False)
+        self._session_maker = async_sessionmaker(
+            expire_on_commit=False,
+            sync_session_class=Session,
+            info={
+                'master': self._engine.sync_engine,
+                'slave': self._ro_engine.sync_engine
+            }
+        )
 
     async def disconnect(self):
         await self.engine.dispose() if self.engine else ...
