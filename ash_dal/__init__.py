@@ -1,4 +1,4 @@
-from database import Database, AsyncDatabase
+from ash_dal.database import Database, AsyncDatabase
 from sqlalchemy import URL
 
 

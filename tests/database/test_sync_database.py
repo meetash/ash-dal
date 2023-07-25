@@ -3,7 +3,7 @@ from unittest import TestCase
 import pytest
 from ash_dal.database.sync_database import Database
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, text
+from sqlalchemy import URL, text, select
 
 
 class CreateSyncDatabaseTestCase(TestCase):
@@ -51,7 +51,6 @@ class CreateSyncDatabaseTestCase(TestCase):
             read_replica_url=self.replica_db_url,
         )
         db.connect()
-        print(self.main_db_url)
         with db.session as session:
-            r = session.execute(text("SELECT 1;"))
+            r = session.execute(select(text("1")))
             assert r.scalar() == 1
