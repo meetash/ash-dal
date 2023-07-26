@@ -29,7 +29,6 @@ class Session(SQLAlchemySession):
             # Make decision either suse master or slave instance based on clause
             master_engine = self.info.get("master")
             slave_engine = self.info.get("slave")
-            print(master_engine, slave_engine)
             if issubclass(clause.__class__, Select) and slave_engine:
                 return slave_engine
             if master_engine:
