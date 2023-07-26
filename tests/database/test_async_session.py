@@ -42,6 +42,9 @@ class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
             await conn.run_sync(self.metadata.drop_all)
             await conn.run_sync(self.metadata.create_all)
 
+    async def asyncTearDown(self) -> None:
+        await self.db.disconnect()
+
     async def test_async_session__select(self):
         async with self.db.session as session:
             r = await session.execute(select(text("1")))
