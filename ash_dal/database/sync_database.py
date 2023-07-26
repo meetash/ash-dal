@@ -9,7 +9,7 @@ from ash_dal.exceptions.database import DBConnectionError
 
 class Database:
     _engine: Engine
-    _ro_engine: Engine
+    _ro_engine: Engine | None
     _session_maker: sessionmaker[Session]
 
     def __init__(
@@ -26,17 +26,17 @@ class Database:
 
     @property
     def engine(self) -> Engine:
-        assert getattr(self, "_engine", None)
+        assert hasattr(self, "_engine")
         return self._engine
 
     @property
     def read_only_engine(self) -> Engine:
-        assert getattr(self, "_ro_engine", None)
+        assert hasattr(self, "_ro_engine")
         return self._engine
 
     @property
     def session_maker(self) -> sessionmaker[Session]:
-        assert getattr(self, "_session_maker", None)
+        assert hasattr(self, "_session_maker")
         return self._session_maker
 
     def connect(self):
@@ -50,8 +50,8 @@ class Database:
         )
 
     def disconnect(self):
-        self.engine.dispose() if self._engine else ...
-        self.read_only_engine.dispose() if getattr(self, "_ro_engine", None) else ...
+        self._engine.dispose() if hasattr(self, "_engine") else ...
+        self._ro_engine.dispose() if hasattr(self, "_ro_engine") and isinstance(self._ro_engine, Engine) else ...
 
     @property
     def session(self) -> Session:

@@ -1,21 +1,23 @@
 import typing as t
+from abc import ABC
 
 from sqlalchemy import inspect
+from sqlalchemy.orm import DeclarativeBase
 
-from ash_dal import Database
+from ash_dal.database import Database
 
-_M = t.TypeVar("_M")  # ORM Model type
+_M = t.TypeVar("_M", bound=DeclarativeBase)  # ORM Model type
 _E = t.TypeVar("_E")  # Entity model
 
 
-class BaseDAO(t.Generic[_E]):
-    __model__: type[_M]
+class BaseDAO(ABC, t.Generic[_E]):
+    __model__: type[_M]  # pyright: ignore [reportGeneralTypeIssues]
     __entity__: type[_E]
     _db: Database
 
     @property
     def db(self) -> Database:
-        assert getattr(self, "_db", None)
+        assert hasattr(self, "_db")
         return self._db
 
     @property

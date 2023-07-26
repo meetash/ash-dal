@@ -26,17 +26,17 @@ class AsyncDatabase:
 
     @property
     def engine(self) -> AsyncEngine:
-        assert getattr(self, "_engine", None)
+        assert hasattr(self, "_engine")
         return self._engine
 
     @property
     def read_only_engine(self) -> AsyncEngine:
-        assert getattr(self, "_ro_engine", None)
+        assert hasattr(self, "_ro_engine")
         return self._engine
 
     @property
     def session_maker(self) -> async_sessionmaker[AsyncSession]:
-        assert getattr(self, "_session_maker", None)
+        assert hasattr(self, "_session_maker")
         return self._session_maker
 
     async def connect(self):
@@ -52,7 +52,9 @@ class AsyncDatabase:
         )
 
     async def disconnect(self):
-        await self.engine.dispose() if self.engine else ...
+        await self._engine.dispose() if hasattr(self, "_engine") else ...
+        if hasattr(self, "_ro_engine") and isinstance(self._ro_engine, AsyncEngine):
+            await self._ro_engine.dispose()
 
     @property
     def session(self) -> AsyncSession:
