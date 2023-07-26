@@ -1,16 +1,16 @@
 import ssl
-import typing as t
 
 from sqlalchemy import URL, Engine, create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
+from ash_dal.database.sync_session import Session
 from ash_dal.exceptions.database import DBConnectionError
 
 
 class Database:
     _engine: Engine
     _ro_engine: Engine
-    _session_maker: t.Callable[[], Session]
+    _session_maker: sessionmaker[Session]
 
     def __init__(
         self,
@@ -35,7 +35,7 @@ class Database:
         return self._engine
 
     @property
-    def session_maker(self) -> t.Callable[[], Session]:
+    def session_maker(self) -> sessionmaker[Session]:
         assert getattr(self, "_session_maker", None)
         return self._session_maker
 
@@ -43,8 +43,11 @@ class Database:
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
         if self.read_replica_url:
             self._ro_engine = self._create_engine(url=self.read_replica_url, ssl_context=self._read_replica_ssl_context)
-        # TODO: Implement a custom session class that will route queries between main and read replicas
-        self._session_maker = sessionmaker(self.engine, expire_on_commit=False)
+        # TODO: Implement a custom session class that will route queries between main and read replicas.
+        # get_bind method of Session class
+        self._session_maker = sessionmaker(
+            class_=Session, expire_on_commit=False, info={"master": self._engine, "slave": self._ro_engine}
+        )
 
     def disconnect(self):
         self.engine.dispose() if self._engine else ...
