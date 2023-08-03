@@ -43,7 +43,11 @@ class SyncPaginatorTestCaseBase(TestCase):
 class SyncPaginatorTestCase(SyncPaginatorTestCaseBase):
     def test_paginator__paginate(self):
         with self.db.session as session:
-            paginator = Paginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = Paginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             counter = 0
             for page in paginator.paginate():
                 assert page
@@ -55,7 +59,7 @@ class SyncPaginatorTestCase(SyncPaginatorTestCaseBase):
     def test_paginator__paginate_with_condition(self):
         id_offset = 40
         with self.db.session as session:
-            paginator = Paginator(
+            paginator = Paginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
                 page_size=self.page_size,
@@ -69,21 +73,29 @@ class SyncPaginatorTestCase(SyncPaginatorTestCaseBase):
 
     def test_paginator__get_page_by_index(self):
         with self.db.session as session:
-            paginator = Paginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = Paginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             page = paginator.get_page(page_index=3)
             assert page
             assert len(page) == self.page_size
 
     def test_paginator__size(self):
         with self.db.session as session:
-            paginator = Paginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = Paginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             assert paginator.size == math.ceil(self.records_count / self.page_size)
 
 
 class SyncDeferredJoinPaginatorTestCase(SyncPaginatorTestCaseBase):
     def test_paginator__paginate(self):
         with self.db.session as session:
-            paginator = DeferredJoinPaginator(
+            paginator = DeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel),
                 page_size=self.page_size,
@@ -100,7 +112,7 @@ class SyncDeferredJoinPaginatorTestCase(SyncPaginatorTestCaseBase):
     def test_paginator__paginate_with_condition(self):
         id_offset = 60
         with self.db.session as session:
-            paginator = DeferredJoinPaginator(
+            paginator = DeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
                 page_size=self.page_size,
@@ -115,7 +127,7 @@ class SyncDeferredJoinPaginatorTestCase(SyncPaginatorTestCaseBase):
 
     def test_paginator__get_page_by_index(self):
         with self.db.session as session:
-            paginator = DeferredJoinPaginator(
+            paginator = DeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel),
                 page_size=self.page_size,

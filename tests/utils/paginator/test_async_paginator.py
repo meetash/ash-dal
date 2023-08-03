@@ -43,7 +43,11 @@ class AsyncPaginatorTestCaseBase(IsolatedAsyncioTestCase):
 class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = AsyncPaginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             counter = 0
             async for page in paginator.paginate():
                 assert page
@@ -55,7 +59,7 @@ class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate_with_condition(self):
         id_offset = 55
         async with self.db.session as session:
-            paginator = AsyncPaginator(
+            paginator = AsyncPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
                 page_size=self.page_size,
@@ -69,14 +73,22 @@ class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
 
     async def test_paginator__get_page_by_index(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = AsyncPaginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             page = await paginator.get_page(page_index=3)
             assert page
             assert len(page) == self.page_size
 
     async def test_paginator__size(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator(session=session, query=select(ExampleORMModel), page_size=self.page_size)
+            paginator = AsyncPaginator[ExampleORMModel](
+                session=session,
+                query=select(ExampleORMModel),
+                page_size=self.page_size,
+            )
             size = await paginator.size
             assert size == math.ceil(self.records_count / self.page_size)
 
@@ -84,7 +96,7 @@ class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
 class AsyncDeferredJoinPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate(self):
         async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator(
+            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel),
                 page_size=self.page_size,
@@ -101,7 +113,7 @@ class AsyncDeferredJoinPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate_with_condition(self):
         id_offset = 55
         async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator(
+            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
                 page_size=self.page_size,
@@ -116,7 +128,7 @@ class AsyncDeferredJoinPaginatorTestCase(AsyncPaginatorTestCaseBase):
 
     async def test_paginator__get_page_by_index(self):
         async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator(
+            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
                 session=session,
                 query=select(ExampleORMModel),
                 page_size=self.page_size,
