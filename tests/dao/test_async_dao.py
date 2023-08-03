@@ -1,3 +1,4 @@
+import math
 from unittest import IsolatedAsyncioTestCase
 
 from ash_dal import AsyncBaseDAO, AsyncDatabase
@@ -11,11 +12,8 @@ class ExampleAsyncDAO(AsyncBaseDAO[ExampleEntity]):
     __entity__ = ExampleEntity
     __model__ = ExampleORMModel
 
-    def __init__(self, database: AsyncDatabase):
-        self._db = database
 
-
-class AsyncDAOTestCase(IsolatedAsyncioTestCase):
+class AsyncDAOFetchingTestCaseBase(IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.faker = Faker()
         self.db = AsyncDatabase(db_url=ASYNC_DB_URL)
@@ -28,17 +26,18 @@ class AsyncDAOTestCase(IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.db.disconnect()
 
-    async def _create_record(self, id_: int, first_name: str, last_name: str, age: int):
-        obj = ExampleORMModel(
+    def _generate_record(
+        self, id_: int, first_name: str | None = None, last_name: str | None = None, age: int | None = None
+    ):
+        return ExampleORMModel(
             id=id_,
-            first_name=first_name,
-            last_name=last_name,
-            age=age,
+            first_name=first_name or self.faker.first_name(),
+            last_name=last_name or self.faker.last_name(),
+            age=age or self.faker.pyint(min_value=10, max_value=100),
         )
-        async with self.db.session as session:
-            session.add(obj)
-            await session.commit()
 
+
+class AsyncDAOTestCase(AsyncDAOFetchingTestCaseBase):
     async def test_get_by_pk(self):
         expected_entity = ExampleEntity(
             id=self.faker.pyint(min_value=1, max_value=10000),
@@ -46,12 +45,18 @@ class AsyncDAOTestCase(IsolatedAsyncioTestCase):
             last_name=self.faker.last_name(),
             age=self.faker.pyint(min_value=16, max_value=100),
         )
-        await self._create_record(
+
+        db_obj = self._generate_record(
             id_=expected_entity.id,
             first_name=expected_entity.first_name,
             last_name=expected_entity.last_name,
             age=expected_entity.age,
         )
+
+        async with self.db.session as session:
+            session.add(db_obj)
+            await session.commit()
+
         result = await self.dao.get_by_pk(expected_entity.id)
         assert result
         assert isinstance(result, ExampleEntity)
@@ -63,3 +68,77 @@ class AsyncDAOTestCase(IsolatedAsyncioTestCase):
     async def test_get_by_pk__not_found(self):
         result = await self.dao.get_by_pk(123)
         assert not result
+
+
+class SyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+        self.records_count = self.faker.pyint(min_value=50, max_value=200)
+        await self._create_records(self.records_count)
+
+    async def _create_records(self, count: int):
+        records = tuple(self._generate_record(id_=i) for i in range(1, count + 1))
+        async with self.db.session as session:
+            session.add_all(records)
+            await session.commit()
+
+    async def test_all(self):
+        results = await self.dao.all()
+        assert results
+        assert isinstance(results, tuple)
+        assert len(results) == self.records_count
+        assert isinstance(results[0], ExampleEntity)
+
+    async def test_get_page__default_page_size(self):
+        results = await self.dao.get_page()
+        assert results
+        assert isinstance(results, tuple)
+        assert len(results) == self.dao.Config.default_page_size
+        assert isinstance(results[0], ExampleEntity)
+
+    async def test_get_page__custom_page_size(self):
+        page_size = self.faker.pyint(min_value=2, max_value=20)
+        results = await self.dao.get_page(page_size=page_size)
+        assert results
+        assert len(results) == page_size
+
+    async def test_get_page__defined_page_index(self):
+        page_index = self.faker.pyint(min_value=1, max_value=4)
+        page_size = 10
+        results = await self.dao.get_page(page_index=page_index, page_size=page_size)
+        assert results
+        assert len(results) == page_size
+
+    async def test_get_page__page_index_out_of_range(self):
+        page_size = 10
+        page_index = math.ceil(self.records_count / page_size) + 1
+        results = await self.dao.get_page(page_index=page_index, page_size=page_size)
+        assert not results
+        assert isinstance(results, tuple)
+
+    async def test_paginate__default_page_size(self):
+        page_size = self.dao.Config.default_page_size
+        pages_count = math.ceil(self.records_count / page_size)
+        pages_counter = 0
+        async for page in self.dao.paginate():
+            pages_counter += 1
+            assert isinstance(page, tuple)
+            assert isinstance(page[0], ExampleEntity)
+            if pages_counter < pages_count:
+                assert len(page) == page_size
+            else:
+                assert len(page) <= page_size
+        assert pages_count == pages_counter
+
+    async def test_paginate__custom_page_size(self):
+        page_size = self.faker.pyint(min_value=2, max_value=20)
+        pages_count = math.ceil(self.records_count / page_size)
+        pages_counter = 0
+        async for page in self.dao.paginate(page_size=page_size):
+            pages_counter += 1
+            assert isinstance(page, tuple)
+            if pages_counter < pages_count:
+                assert len(page) == page_size
+            else:
+                assert len(page) <= page_size
+        assert pages_count == pages_counter
