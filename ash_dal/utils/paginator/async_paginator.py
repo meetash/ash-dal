@@ -22,7 +22,7 @@ class AsyncPaginator(t.Generic[T]):
         page: t.Sequence[T] = result.all()
         return page
 
-    async def paginate(self):
+    async def paginate(self) -> t.AsyncIterator[t.Sequence[T]]:
         current_page = 0
         while True:
             page = await self.get_page(page_index=current_page)
