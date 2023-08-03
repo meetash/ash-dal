@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from ash_dal import BaseDAO, Database
 from faker import Faker
-from sqlalchemy import URL
 
+from tests.constants import SYNC_DB_URL
 from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
 
 
@@ -18,15 +18,7 @@ class ExampleDAO(BaseDAO[ExampleEntity]):
 class SyncDAOTestCase(TestCase):
     def setUp(self) -> None:
         self.faker = Faker()
-        main_db_url = URL.create(
-            drivername="mysql+pymysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3306,
-            database="my_db",
-        )
-        self.db = Database(db_url=main_db_url)
+        self.db = Database(db_url=SYNC_DB_URL)
         self.db.connect()
         ExampleORMModel.metadata.drop_all(self.db.engine)
         ExampleORMModel.metadata.create_all(self.db.engine)

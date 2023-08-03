@@ -3,27 +3,15 @@ from unittest import TestCase
 import pytest
 from ash_dal.database.sync_database import Database
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, select, text
+from sqlalchemy import select, text
+
+from tests.constants import SYNC_DB_URL, SYNC_DB_URL__SLAVE
 
 
 class CreateSyncDatabaseTestCase(TestCase):
     def setUp(self) -> None:
-        self.main_db_url = URL.create(
-            drivername="mysql+pymysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3306,
-            database="my_db",
-        )
-        self.replica_db_url = URL.create(
-            drivername="mysql+pymysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3307,
-            database="my_db",
-        )
+        self.main_db_url = SYNC_DB_URL
+        self.replica_db_url = SYNC_DB_URL__SLAVE
 
     def test_create_sync_database(self):
         db = Database(

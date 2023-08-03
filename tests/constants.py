@@ -9,6 +9,7 @@ SYNC_DB_URL = URL.create(
     database="my_db",
 )
 
+SYNC_DB_URL__SLAVE = SYNC_DB_URL.set(port=3307)
 
 ASYNC_DB_URL = URL.create(
     drivername="mysql+aiomysql",
@@ -18,3 +19,5 @@ ASYNC_DB_URL = URL.create(
     port=3306,
     database="my_db",
 )
+
+ASYNC_DB_URL__SLAVE = ASYNC_DB_URL.set(port=3307)
