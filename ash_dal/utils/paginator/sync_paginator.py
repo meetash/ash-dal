@@ -19,8 +19,6 @@ class Paginator(t.Generic[ORMModel]):
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
         page: t.Sequence[ORMModel] = self._session.scalars(page_stmt).all()
-        if not page:
-            raise IndexError("Page index out of range")
         return PaginatorPage(index=page_index, items=tuple(page))
 
     def paginate(self) -> t.Iterator[PaginatorPage[ORMModel]]:
@@ -56,6 +54,4 @@ class DeferredJoinPaginator(Paginator[ORMModel]):
             onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportGeneralTypeIssues]
         )
         page: t.Sequence[ORMModel] = self._session.scalars(stmt).all()
-        if not page:
-            raise IndexError("Page index out of range")
         return PaginatorPage(index=page_index, items=tuple(page))

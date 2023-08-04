@@ -20,8 +20,6 @@ class AsyncPaginator(t.Generic[ORMModel]):
         page_stmt = self._query.offset(offset).limit(self._page_size)
         result = await self._session.scalars(page_stmt)
         page: t.Sequence[ORMModel] = result.all()
-        if not page:
-            raise IndexError("Page index out of range")
         return PaginatorPage(index=page_index, items=tuple(page))
 
     async def paginate(self) -> t.AsyncIterator[PaginatorPage[ORMModel]]:
@@ -58,6 +56,4 @@ class AsyncDeferredJoinPaginator(AsyncPaginator[ORMModel]):
         )
         result = await self._session.scalars(stmt)
         page: t.Sequence[ORMModel] = result.all()
-        if not page:
-            raise IndexError("Page index out of range")
         return PaginatorPage(index=page_index, items=tuple(page))
