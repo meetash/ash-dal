@@ -1,6 +1,6 @@
 import typing as t
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 
 from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
 from ash_dal.database import Database
@@ -70,3 +70,11 @@ class BaseDAO(BaseDAOMixin[Entity]):
         with self.db.session as session:
             db_items = session.scalars(select(self.__model__).filter_by(**specification))
             return self._get_entities_from_db_items(db_items=db_items)
+
+    def create(self, data: dict[str, t.Any]) -> Entity:
+        with self.db.session as session:
+            result = session.execute(insert(self.__model__).values(**data))
+            session.commit()
+            pk_dict: dict[str, t.Any] = result.inserted_primary_key._asdict()  # pyright: ignore
+            response_data = {**data, **pk_dict}
+            return self._dict_to_entity(dict_=response_data)

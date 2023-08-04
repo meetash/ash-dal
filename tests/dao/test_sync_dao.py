@@ -16,7 +16,7 @@ class ExampleDAO(BaseDAO[ExampleEntity]):
     __model__ = ExampleORMModel
 
 
-class SyncDAOFetchingTestCaseBase(TestCase):
+class SyncDAOTestCaseBase(TestCase):
     def setUp(self) -> None:
         self.faker = Faker()
         self.db = Database(db_url=SYNC_DB_URL)
@@ -28,6 +28,8 @@ class SyncDAOFetchingTestCaseBase(TestCase):
     def tearDown(self) -> None:
         self.db.disconnect()
 
+
+class SyncDAOFetchingTestCaseBase(SyncDAOTestCaseBase):
     def _generate_record(
         self, id_: int, first_name: str | None = None, last_name: str | None = None, age: int | None = None
     ):
@@ -195,3 +197,17 @@ class SyncDAOFetchFilteredTestCase(SyncDAOFetchingTestCaseBase):
             assert isinstance(page[0], ExampleEntity)
             page_counter += 1
         assert page_counter == pages_count
+
+
+class SyncDAOCreateTestCase(SyncDAOTestCaseBase):
+    def test_create(self):
+        data = {
+            "first_name": self.faker.first_name(),
+            "last_name": self.faker.last_name(),
+            "age": self.faker.pyint(min_value=10, max_value=100),
+        }
+        entity = self.dao.create(data=data)
+        assert isinstance(entity, ExampleEntity)
+        with self.db.session as session:
+            instance = session.get(ExampleORMModel, entity.id)
+            assert instance
