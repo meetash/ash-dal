@@ -1,4 +1,6 @@
 import math
+import random
+from collections import Counter
 from unittest import TestCase
 
 from ash_dal import BaseDAO, Database
@@ -119,13 +121,13 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         pages_count = math.ceil(self.records_count / page_size)
         pages_counter = 0
         for page in self.dao.paginate():
-            pages_counter += 1
             assert isinstance(page, PaginatorPage)
             assert isinstance(page[0], ExampleEntity)
             if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
+            pages_counter += 1
         assert pages_count == pages_counter
 
     def test_paginate__custom_page_size(self):
@@ -133,10 +135,63 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         pages_count = math.ceil(self.records_count / page_size)
         pages_counter = 0
         for page in self.dao.paginate(page_size=page_size):
-            pages_counter += 1
             assert isinstance(page, PaginatorPage)
             if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
+            pages_counter += 1
         assert pages_count == pages_counter
+
+
+class SyncDAOFetchFilteredTestCase(SyncDAOFetchingTestCaseBase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.records_count = self.faker.pyint(min_value=50, max_value=200)
+        self.records_counter = Counter()
+        self._create_records(self.records_count)
+
+    def _create_records(self, count: int):
+        records = tuple(self._generate_record(id_=i) for i in range(1, count + 1))
+        with self.db.session as session:
+            session.bulk_save_objects(objects=records)
+            session.commit()
+
+    def _generate_record(
+        self, id_: int, first_name: str | None = None, last_name: str | None = None, age: int | None = None
+    ):
+        record = ExampleORMModel(
+            id=id_,
+            first_name=first_name or self.faker.first_name(),
+            last_name=last_name or self.faker.last_name(),
+            age=age or random.choice((20, 30)),
+        )
+        self.records_counter[str(record.age)] += 1
+        return record
+
+    def test_filter(self):
+        results_20_age = self.dao.filter(specification={"age": 20})
+        results_30_age = self.dao.filter(specification={"age": 30})
+        assert len(results_20_age) == self.records_counter["20"]
+        assert len(results_30_age) == self.records_counter["30"]
+
+    def test_filter__not_found(self):
+        results = self.dao.filter(specification={"age": 40})
+        assert not results
+        assert isinstance(results, tuple)
+
+    def test_paginate_filtered(self):
+        page_size = 3
+        pages_count = math.ceil(self.records_counter["30"] / page_size)
+        results = self.dao.paginate(specification={"age": 30}, page_size=page_size)
+        page_counter = 0
+        for page in results:
+            assert page
+            assert isinstance(page, PaginatorPage)
+            if page.index + 1 < pages_count:
+                assert len(page) == page_size
+            else:
+                assert len(page) <= page_size
+            assert isinstance(page[0], ExampleEntity)
+            page_counter += 1
+        assert page_counter == pages_count
