@@ -183,11 +183,11 @@ class AsyncDAOFetchFilteredTestCase(AsyncDAOFetchingTestCaseBase):
         assert not results
         assert isinstance(results, tuple)
 
-    async def test_filter_paginated(self):
+    async def test_paginate_filtered(self):
         page_size = 3
         pages_count = math.ceil(self.records_counter["30"] / page_size)
         page_counter = 0
-        async for page in self.dao.filter_paginated(specification={"age": 30}, page_size=page_size):
+        async for page in self.dao.paginate(specification={"age": 30}, page_size=page_size):
             assert page
             assert isinstance(page, PaginatorPage)
             if page.index + 1 < pages_count:

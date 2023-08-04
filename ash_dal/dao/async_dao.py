@@ -49,10 +49,19 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
             entities = self._get_entities_from_db_items(db_items=page)
             return PaginatorPage(index=page_index, items=entities)
 
-    async def paginate(self, page_size: int | None = None) -> t.AsyncIterator[PaginatorPage[Entity]]:
+    async def paginate(
+        self,
+        specification: dict[str, t.Any] | None = None,
+        page_size: int | None = None,
+    ) -> t.AsyncIterator[PaginatorPage[Entity]]:
         async with self.db.session as session:
+            query = select(self.__model__)
+            if specification:
+                query = query.filter_by(**specification)
             paginator = self._config.paginator_class(
-                session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
+                session=session,
+                query=query,
+                page_size=page_size or self._config.default_page_size,
             )
             async for page in paginator.paginate():
                 entities = self._get_entities_from_db_items(db_items=page)
@@ -62,18 +71,3 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         async with self.db.session as session:
             db_items = await session.scalars(select(self.__model__).filter_by(**specification))
             return self._get_entities_from_db_items(db_items=db_items)
-
-    async def filter_paginated(
-        self,
-        specification: dict[str, t.Any],
-        page_size: int | None = None,
-    ) -> t.AsyncIterator[PaginatorPage[Entity]]:
-        async with self.db.session as session:
-            paginator = self._config.paginator_class(
-                session=session,
-                query=select(self.__model__).filter_by(**specification),
-                page_size=page_size or self._config.default_page_size,
-            )
-            async for page in paginator.paginate():
-                entities = self._get_entities_from_db_items(db_items=page)
-                yield PaginatorPage(index=page.index, items=entities)

@@ -180,10 +180,10 @@ class SyncDAOFetchFilteredTestCase(SyncDAOFetchingTestCaseBase):
         assert not results
         assert isinstance(results, tuple)
 
-    def test_filter_paginated(self):
+    def test_paginate_filtered(self):
         page_size = 3
         pages_count = math.ceil(self.records_counter["30"] / page_size)
-        results = self.dao.filter_paginated(specification={"age": 30}, page_size=page_size)
+        results = self.dao.paginate(specification={"age": 30}, page_size=page_size)
         page_counter = 0
         for page in results:
             assert page
