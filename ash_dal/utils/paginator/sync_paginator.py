@@ -24,9 +24,8 @@ class Paginator(t.Generic[ORMModel]):
     def paginate(self) -> t.Iterator[PaginatorPage[ORMModel]]:
         current_page = 0
         while True:
-            try:
-                page = self.get_page(page_index=current_page)
-            except IndexError:
+            page = self.get_page(page_index=current_page)
+            if not page:
                 break
             yield page
             current_page += 1

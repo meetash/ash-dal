@@ -25,9 +25,8 @@ class AsyncPaginator(t.Generic[ORMModel]):
     async def paginate(self) -> t.AsyncIterator[PaginatorPage[ORMModel]]:
         current_page = 0
         while True:
-            try:
-                page = await self.get_page(page_index=current_page)
-            except IndexError:
+            page = await self.get_page(page_index=current_page)
+            if not page:
                 break
             yield page
             current_page += 1
