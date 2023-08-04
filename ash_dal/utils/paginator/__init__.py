@@ -1,4 +1,5 @@
 from ash_dal.utils.paginator.async_paginator import AsyncDeferredJoinPaginator, AsyncPaginator
+from ash_dal.utils.paginator.paginator_page import PaginatorPage
 from ash_dal.utils.paginator.sync_paginator import DeferredJoinPaginator, Paginator
 
 __all__ = [
@@ -6,4 +7,5 @@ __all__ = [
     "DeferredJoinPaginator",
     "AsyncPaginator",
     "AsyncDeferredJoinPaginator",
+    "PaginatorPage",
 ]
