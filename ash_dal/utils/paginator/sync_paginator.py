@@ -2,27 +2,26 @@ import math
 import typing as t
 
 from sqlalchemy import Select, func, select
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.roles import ColumnsClauseRole
 
+from ash_dal.typing import ORMModel
 from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
-T = t.TypeVar("T", bound=DeclarativeBase)
 
-
-class Paginator(t.Generic[T]):
+class Paginator(t.Generic[ORMModel]):
     def __init__(self, session: Session, query: Select[t.Any], page_size: int):
         self._session = session
         self._page_size = page_size
         self._query = query
 
-    def get_page(self, page_index: int) -> PaginatorPage[T]:
+    def get_page(self, page_index: int) -> PaginatorPage[ORMModel]:
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
-        page: t.Sequence[T] = self._session.scalars(page_stmt).all()
+        page: t.Sequence[ORMModel] = self._session.scalars(page_stmt).all()
         return PaginatorPage(index=page_index, items=tuple(page))
 
-    def paginate(self) -> t.Iterator[PaginatorPage[T]]:
+    def paginate(self) -> t.Iterator[PaginatorPage[ORMModel]]:
         current_page = 0
         while True:
             page = self.get_page(page_index=current_page)
@@ -39,12 +38,12 @@ class Paginator(t.Generic[T]):
         return math.ceil(items_count / self._page_size)
 
 
-class DeferredJoinPaginator(Paginator[T]):
+class DeferredJoinPaginator(Paginator[ORMModel]):
     def __init__(self, session: Session, query: Select[t.Any], page_size: int, pk_field: ColumnsClauseRole):
         super().__init__(session=session, query=query, page_size=page_size)
         self._pk_field = pk_field
 
-    def get_page(self, page_index: int) -> PaginatorPage[T]:
+    def get_page(self, page_index: int) -> PaginatorPage[ORMModel]:
         offset = page_index * self._page_size
         deferred_join_subquery = (
             self._query.with_only_columns(self._pk_field).offset(offset).limit(self._page_size).subquery()
@@ -53,5 +52,5 @@ class DeferredJoinPaginator(Paginator[T]):
             target=deferred_join_subquery,
             onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportGeneralTypeIssues]
         )
-        page: t.Sequence[T] = self._session.scalars(stmt).all()
+        page: t.Sequence[ORMModel] = self._session.scalars(stmt).all()
         return PaginatorPage(index=page_index, items=tuple(page))
