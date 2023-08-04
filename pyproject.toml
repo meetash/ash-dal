@@ -14,7 +14,7 @@ aiomysql = "^0.2.0"
 cryptography = "^41.0.2"
 
 [tool.poetry.group.dev.dependencies]
-pyright = "^1.1.317"
+pyright = "^1.1.320"
 black = "^23.7.0"
 ruff = "^0.0.278"
 pytest = "^7.4.0"

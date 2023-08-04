@@ -2,8 +2,8 @@ from unittest import IsolatedAsyncioTestCase
 
 from ash_dal import AsyncBaseDAO, AsyncDatabase
 from faker import Faker
-from sqlalchemy import URL
 
+from tests.constants import ASYNC_DB_URL
 from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
 
 
@@ -18,15 +18,7 @@ class ExampleAsyncDAO(AsyncBaseDAO[ExampleEntity]):
 class AsyncDAOTestCase(IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.faker = Faker()
-        main_db_url = URL.create(
-            drivername="mysql+aiomysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3306,
-            database="my_db",
-        )
-        self.db = AsyncDatabase(db_url=main_db_url)
+        self.db = AsyncDatabase(db_url=ASYNC_DB_URL)
         await self.db.connect()
         async with self.db.engine.begin() as conn:
             await conn.run_sync(ExampleORMModel.metadata.drop_all)

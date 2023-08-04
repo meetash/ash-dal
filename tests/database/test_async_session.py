@@ -3,31 +3,17 @@ from unittest.mock import MagicMock
 
 import pytest
 from ash_dal.database import AsyncDatabase
-from sqlalchemy import URL, Column, Integer, MetaData, String, Table, insert, select, text
+from sqlalchemy import Column, Integer, MetaData, String, Table, insert, select, text
 from sqlalchemy.exc import UnboundExecutionError
+
+from tests.constants import ASYNC_DB_URL, ASYNC_DB_URL__SLAVE
 
 
 class CreateAsyncSessionTestCase(IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
-        main_db_url = URL.create(
-            drivername="mysql+aiomysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3306,
-            database="my_db",
-        )
-        replica_db_url = URL.create(
-            drivername="mysql+aiomysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3307,
-            database="my_db",
-        )
         self.db = AsyncDatabase(
-            db_url=main_db_url,
-            read_replica_url=replica_db_url,
+            db_url=ASYNC_DB_URL,
+            read_replica_url=ASYNC_DB_URL__SLAVE,
         )
         self.metadata = MetaData()
         await self.db.connect()

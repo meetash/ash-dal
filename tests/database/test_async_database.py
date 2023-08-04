@@ -3,27 +3,15 @@ from unittest import IsolatedAsyncioTestCase
 import pytest
 from ash_dal.database.async_database import AsyncDatabase
 from ash_dal.exceptions.database import DBConnectionError
-from sqlalchemy import URL, select, text
+from sqlalchemy import select, text
+
+from tests.constants import ASYNC_DB_URL, ASYNC_DB_URL__SLAVE
 
 
 class CreateSyncDatabaseTestCase(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.main_db_url = URL.create(
-            drivername="mysql+aiomysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3306,
-            database="my_db",
-        )
-        self.replica_db_url = URL.create(
-            drivername="mysql+aiomysql",
-            username="my_db_user",
-            password="S3cret",
-            host="127.0.0.1",
-            port=3307,
-            database="my_db",
-        )
+        self.main_db_url = ASYNC_DB_URL
+        self.replica_db_url = ASYNC_DB_URL__SLAVE
 
     async def test_create_async_database(self):
         db = AsyncDatabase(
