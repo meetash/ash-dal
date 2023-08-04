@@ -6,6 +6,7 @@ from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
 from ash_dal.database import AsyncDatabase
 from ash_dal.typing import Entity
 from ash_dal.utils import AsyncPaginator
+from ash_dal.utils.paginator import PaginatorPage
 
 
 class AsyncBaseDAO(BaseDAOMixin[Entity]):
@@ -39,18 +40,20 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         self,
         page_index: int = 0,
         page_size: int | None = None,
-    ) -> tuple[Entity, ...]:
+    ) -> PaginatorPage[Entity]:
         async with self.db.session as session:
             paginator = self._config.paginator_class(
                 session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
             )
             page = await paginator.get_page(page_index=page_index)
-            return self._get_entities_from_db_items(db_items=page)
+            entities = self._get_entities_from_db_items(db_items=page)
+            return PaginatorPage(index=page_index, items=entities)
 
-    async def paginate(self, page_size: int | None = None) -> t.AsyncIterator[tuple[Entity, ...]]:
+    async def paginate(self, page_size: int | None = None) -> t.AsyncIterator[PaginatorPage[Entity]]:
         async with self.db.session as session:
             paginator = self._config.paginator_class(
                 session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
             )
             async for page in paginator.paginate():
-                yield self._get_entities_from_db_items(db_items=page)
+                entities = self._get_entities_from_db_items(db_items=page)
+                yield PaginatorPage(index=page.index, items=entities)

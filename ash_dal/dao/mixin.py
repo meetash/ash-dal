@@ -5,6 +5,7 @@ from functools import cached_property
 from sqlalchemy import ScalarResult, inspect
 
 from ash_dal.typing import Entity, ORMModel
+from ash_dal.utils.paginator import PaginatorPage
 
 DEFAULT_PAGE_SIZE = 20
 
@@ -25,7 +26,7 @@ class BaseDAOMixin(ABC, t.Generic[Entity]):
 
     def _get_entities_from_db_items(
         self,
-        db_items: t.Sequence[ORMModel] | ScalarResult[ORMModel],
+        db_items: t.Sequence[ORMModel] | ScalarResult[ORMModel] | PaginatorPage[ORMModel],
     ) -> tuple[Entity, ...]:
         entities = tuple(self._convert_db_item_in_entity(db_item=db_item) for db_item in db_items)
         return entities
