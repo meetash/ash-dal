@@ -2,6 +2,7 @@ import math
 from unittest import IsolatedAsyncioTestCase
 
 from ash_dal import AsyncBaseDAO, AsyncDatabase
+from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
 
 from tests.constants import ASYNC_DB_URL
@@ -92,7 +93,7 @@ class SyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
     async def test_get_page__default_page_size(self):
         results = await self.dao.get_page()
         assert results
-        assert isinstance(results, tuple)
+        assert isinstance(results, PaginatorPage)
         assert len(results) == self.dao.Config.default_page_size
         assert isinstance(results[0], ExampleEntity)
 
@@ -114,7 +115,7 @@ class SyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
         page_index = math.ceil(self.records_count / page_size) + 1
         results = await self.dao.get_page(page_index=page_index, page_size=page_size)
         assert not results
-        assert isinstance(results, tuple)
+        assert isinstance(results, PaginatorPage)
 
     async def test_paginate__default_page_size(self):
         page_size = self.dao.Config.default_page_size
@@ -122,9 +123,9 @@ class SyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
         pages_counter = 0
         async for page in self.dao.paginate():
             pages_counter += 1
-            assert isinstance(page, tuple)
+            assert isinstance(page, PaginatorPage)
             assert isinstance(page[0], ExampleEntity)
-            if pages_counter < pages_count:
+            if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
@@ -136,8 +137,8 @@ class SyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
         pages_counter = 0
         async for page in self.dao.paginate(page_size=page_size):
             pages_counter += 1
-            assert isinstance(page, tuple)
-            if pages_counter < pages_count:
+            assert isinstance(page, PaginatorPage)
+            if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size

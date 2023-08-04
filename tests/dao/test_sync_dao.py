@@ -1,7 +1,6 @@
 import math
 from unittest import TestCase
 
-import pytest
 from ash_dal import BaseDAO, Database
 from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
@@ -91,7 +90,7 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
     def test_get_page__default_page_size(self):
         results = self.dao.get_page()
         assert results
-        assert isinstance(results, tuple)
+        assert isinstance(results, PaginatorPage)
         assert len(results) == self.dao.Config.default_page_size
         assert isinstance(results[0], ExampleEntity)
 
@@ -111,8 +110,9 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
     def test_get_page__page_index_out_of_range(self):
         page_size = 10
         page_index = math.ceil(self.records_count / page_size) + 1
-        with pytest.raises(IndexError):
-            self.dao.get_page(page_index=page_index, page_size=page_size)
+        results = self.dao.get_page(page_index=page_index, page_size=page_size)
+        assert not results
+        assert isinstance(results, PaginatorPage)
 
     def test_paginate__default_page_size(self):
         page_size = self.dao.Config.default_page_size
@@ -121,7 +121,7 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         for page in self.dao.paginate():
             assert isinstance(page, PaginatorPage)
             assert isinstance(page[0], ExampleEntity)
-            if page.index < pages_count - 1:
+            if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
@@ -134,7 +134,7 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         pages_counter = 0
         for page in self.dao.paginate(page_size=page_size):
             assert isinstance(page, PaginatorPage)
-            if page.index < pages_count - 1:
+            if page.index + 1 < pages_count:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size

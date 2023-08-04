@@ -39,13 +39,14 @@ class BaseDAO(BaseDAOMixin[Entity]):
         self,
         page_index: int = 0,
         page_size: int | None = None,
-    ) -> tuple[Entity, ...]:
+    ) -> PaginatorPage[Entity]:
         with self.db.session as session:
             paginator = self._config.paginator_class(
                 session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
             )
             page = paginator.get_page(page_index=page_index)
-            return self._get_entities_from_db_items(db_items=page)
+            entities = self._get_entities_from_db_items(db_items=page)
+            return PaginatorPage(index=page_index, items=entities)
 
     def paginate(self, page_size: int | None = None) -> t.Iterator[PaginatorPage[Entity]]:
         with self.db.session as session:
@@ -65,7 +66,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
         self,
         specification: dict[str, t.Any],
         page_size: int | None = None,
-    ) -> t.Iterator[tuple[Entity, ...]]:
+    ) -> t.Iterator[PaginatorPage[Entity]]:
         with self.db.session as session:
             paginator = self._config.paginator_class(
                 session=session,
@@ -73,4 +74,5 @@ class BaseDAO(BaseDAOMixin[Entity]):
                 page_size=page_size or self._config.default_page_size,
             )
             for page in paginator.paginate():
-                yield self._get_entities_from_db_items(db_items=page)
+                entities = self._get_entities_from_db_items(db_items=page)
+                yield PaginatorPage(index=page.index, items=entities)
