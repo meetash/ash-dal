@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.roles import ColumnsClauseRole
 
+from ash_dal.utils.paginator.paginator_page import PaginatorPage
+
 T = t.TypeVar("T", bound=DeclarativeBase)
 
 
@@ -15,14 +17,14 @@ class AsyncPaginator(t.Generic[T]):
         self._page_size = page_size
         self._query = query
 
-    async def get_page(self, page_index: int) -> t.Sequence[T]:
+    async def get_page(self, page_index: int) -> PaginatorPage[T]:
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
         result = await self._session.scalars(page_stmt)
         page: t.Sequence[T] = result.all()
-        return page
+        return PaginatorPage(index=page_index, items=tuple(page))
 
-    async def paginate(self):
+    async def paginate(self) -> t.AsyncIterator[PaginatorPage[T]]:
         current_page = 0
         while True:
             page = await self.get_page(page_index=current_page)
@@ -44,7 +46,7 @@ class AsyncDeferredJoinPaginator(AsyncPaginator[T]):
         super().__init__(session=session, query=query, page_size=page_size)
         self._pk_field = pk_field
 
-    async def get_page(self, page_index: int) -> t.Sequence[T]:
+    async def get_page(self, page_index: int) -> PaginatorPage[T]:
         offset = page_index * self._page_size
         deferred_join_subquery = (
             self._query.with_only_columns(self._pk_field).offset(offset).limit(self._page_size).subquery()
@@ -55,4 +57,4 @@ class AsyncDeferredJoinPaginator(AsyncPaginator[T]):
         )
         result = await self._session.scalars(stmt)
         page: t.Sequence[T] = result.all()
-        return page
+        return PaginatorPage(index=page_index, items=tuple(page))
