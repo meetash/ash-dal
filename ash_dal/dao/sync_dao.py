@@ -6,6 +6,7 @@ from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
 from ash_dal.database import Database
 from ash_dal.typing import Entity
 from ash_dal.utils import Paginator
+from ash_dal.utils.paginator import PaginatorPage
 
 
 class BaseDAO(BaseDAOMixin[Entity]):
@@ -46,10 +47,30 @@ class BaseDAO(BaseDAOMixin[Entity]):
             page = paginator.get_page(page_index=page_index)
             return self._get_entities_from_db_items(db_items=page)
 
-    def paginate(self, page_size: int | None = None) -> t.Iterator[tuple[Entity, ...]]:
+    def paginate(self, page_size: int | None = None) -> t.Iterator[PaginatorPage[Entity]]:
         with self.db.session as session:
             paginator = self._config.paginator_class(
                 session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
+            )
+            for page_index, page in enumerate(paginator.paginate()):
+                entities = self._get_entities_from_db_items(db_items=page)
+                yield PaginatorPage(index=page_index, items=entities)
+
+    def filter(self, specification: dict[str, t.Any]) -> tuple[Entity, ...]:
+        with self.db.session as session:
+            db_items = session.scalars(select(self.__model__).filter_by(**specification))
+            return self._get_entities_from_db_items(db_items=db_items)
+
+    def filter_paginated(
+        self,
+        specification: dict[str, t.Any],
+        page_size: int | None = None,
+    ) -> t.Iterator[tuple[Entity, ...]]:
+        with self.db.session as session:
+            paginator = self._config.paginator_class(
+                session=session,
+                query=select(self.__model__).filter_by(**specification),
+                page_size=page_size or self._config.default_page_size,
             )
             for page in paginator.paginate():
                 yield self._get_entities_from_db_items(db_items=page)

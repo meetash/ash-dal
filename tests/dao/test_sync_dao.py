@@ -1,7 +1,9 @@
 import math
 from unittest import TestCase
 
+import pytest
 from ash_dal import BaseDAO, Database
+from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
 
 from tests.constants import SYNC_DB_URL
@@ -109,22 +111,21 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
     def test_get_page__page_index_out_of_range(self):
         page_size = 10
         page_index = math.ceil(self.records_count / page_size) + 1
-        results = self.dao.get_page(page_index=page_index, page_size=page_size)
-        assert not results
-        assert isinstance(results, tuple)
+        with pytest.raises(IndexError):
+            self.dao.get_page(page_index=page_index, page_size=page_size)
 
     def test_paginate__default_page_size(self):
         page_size = self.dao.Config.default_page_size
         pages_count = math.ceil(self.records_count / page_size)
         pages_counter = 0
         for page in self.dao.paginate():
-            pages_counter += 1
-            assert isinstance(page, tuple)
+            assert isinstance(page, PaginatorPage)
             assert isinstance(page[0], ExampleEntity)
-            if pages_counter < pages_count:
+            if page.index < pages_count - 1:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
+            pages_counter += 1
         assert pages_count == pages_counter
 
     def test_paginate__custom_page_size(self):
@@ -132,10 +133,10 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         pages_count = math.ceil(self.records_count / page_size)
         pages_counter = 0
         for page in self.dao.paginate(page_size=page_size):
-            pages_counter += 1
-            assert isinstance(page, tuple)
-            if pages_counter < pages_count:
+            assert isinstance(page, PaginatorPage)
+            if page.index < pages_count - 1:
                 assert len(page) == page_size
             else:
                 assert len(page) <= page_size
+            pages_counter += 1
         assert pages_count == pages_counter

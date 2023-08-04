@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.roles import ColumnsClauseRole
 
 from ash_dal.typing import ORMModel
+from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
 
 class Paginator(t.Generic[ORMModel]):
@@ -14,17 +15,20 @@ class Paginator(t.Generic[ORMModel]):
         self._page_size = page_size
         self._query = query
 
-    def get_page(self, page_index: int) -> t.Sequence[ORMModel]:
+    def get_page(self, page_index: int) -> PaginatorPage[ORMModel]:
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
         page: t.Sequence[ORMModel] = self._session.scalars(page_stmt).all()
-        return page
+        if not page:
+            raise IndexError("Page index out of range")
+        return PaginatorPage(index=page_index, items=tuple(page))
 
-    def paginate(self) -> t.Iterator[t.Sequence[ORMModel]]:
+    def paginate(self) -> t.Iterator[PaginatorPage[ORMModel]]:
         current_page = 0
         while True:
-            page = self.get_page(page_index=current_page)
-            if not page:
+            try:
+                page = self.get_page(page_index=current_page)
+            except IndexError:
                 break
             yield page
             current_page += 1
@@ -42,7 +46,7 @@ class DeferredJoinPaginator(Paginator[ORMModel]):
         super().__init__(session=session, query=query, page_size=page_size)
         self._pk_field = pk_field
 
-    def get_page(self, page_index: int) -> t.Sequence[ORMModel]:
+    def get_page(self, page_index: int) -> PaginatorPage[ORMModel]:
         offset = page_index * self._page_size
         deferred_join_subquery = (
             self._query.with_only_columns(self._pk_field).offset(offset).limit(self._page_size).subquery()
@@ -52,4 +56,6 @@ class DeferredJoinPaginator(Paginator[ORMModel]):
             onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportGeneralTypeIssues]
         )
         page: t.Sequence[ORMModel] = self._session.scalars(stmt).all()
-        return page
+        if not page:
+            raise IndexError("Page index out of range")
+        return PaginatorPage(index=page_index, items=tuple(page))
