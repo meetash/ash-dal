@@ -85,12 +85,16 @@ class BaseDAO(BaseDAOMixin[Entity]):
             session.commit()
 
     def update(self, specification: dict[str, t.Any], update_data: dict[str, t.Any]) -> bool:
+        if not specification:
+            raise ValueError("Specification should be passed")
         with self.db.session as session:
             result = session.execute(update(self.__model__).filter_by(**specification), update_data)
             session.commit()
             return bool(result.rowcount)  # pyright: ignore
 
     def delete(self, specification: dict[str, t.Any]) -> bool:
+        if not specification:
+            raise ValueError("Specification should be passed")
         with self.db.session as session:
             result = session.execute(delete(self.__model__).filter_by(**specification))
             session.commit()

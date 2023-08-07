@@ -3,6 +3,7 @@ import random
 from collections import Counter
 from unittest import IsolatedAsyncioTestCase
 
+import pytest
 from ash_dal import AsyncBaseDAO, AsyncDatabase
 from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
@@ -262,6 +263,10 @@ class AsyncDAOUpdateTestCase(AsyncDAOTestCaseBase):
             assert instance.last_name == update_data["last_name"]
             assert instance.age == update_data["age"]
 
+    async def test_update__empty_specification(self):
+        with pytest.raises(ValueError):
+            await self.dao.update(specification={}, update_data={})
+
 
 class AsyncDAODeleteTestCase(AsyncDAOTestCaseBase):
     async def _create_record(self):
@@ -284,3 +289,7 @@ class AsyncDAODeleteTestCase(AsyncDAOTestCaseBase):
         async with self.db.session as session:
             instance = await session.get(ExampleORMModel, record_id)
             assert not instance
+
+    async def test_delete__empty_specification(self):
+        with pytest.raises(ValueError):
+            await self.dao.delete(specification={})

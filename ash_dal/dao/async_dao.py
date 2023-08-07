@@ -86,12 +86,16 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
             await session.commit()
 
     async def update(self, specification: dict[str, t.Any], update_data: dict[str, t.Any]) -> bool:
+        if not specification:
+            raise ValueError("Specification should be passed")
         async with self.db.session as session:
             result = await session.execute(update(self.__model__).filter_by(**specification), update_data)
             await session.commit()
             return bool(result.rowcount)  # pyright: ignore
 
     async def delete(self, specification: dict[str, t.Any]) -> bool:
+        if not specification:
+            raise ValueError("Specification should be passed")
         async with self.db.session as session:
             result = await session.execute(delete(self.__model__).filter_by(**specification))
             await session.commit()
