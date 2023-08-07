@@ -214,7 +214,7 @@ class SyncDAOCreateTestCase(SyncDAOTestCaseBase):
             assert instance
 
     def test_bulk_create(self):
-        items_count = 5
+        items_count = self.faker.pyint(min_value=2, max_value=10)
         data = tuple(
             {
                 "first_name": self.faker.first_name(),

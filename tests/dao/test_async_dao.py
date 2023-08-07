@@ -216,7 +216,7 @@ class AsyncDAOCreateTestCase(AsyncDAOTestCaseBase):
             assert instance
 
     async def test_bulk_create(self):
-        items_count = 7
+        items_count = self.faker.pyint(min_value=2, max_value=10)
         data = tuple(
             {
                 "first_name": self.faker.first_name(),
