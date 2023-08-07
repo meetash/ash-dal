@@ -1,6 +1,6 @@
 import typing as t
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 
 from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
 from ash_dal.database import AsyncDatabase
@@ -84,3 +84,9 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         async with self.db.session as session:
             await session.execute(insert(self.__model__), data)
             await session.commit()
+
+    async def update(self, specification: dict[str, t.Any], update_data: dict[str, t.Any]) -> bool:
+        async with self.db.session as session:
+            result = await session.execute(update(self.__model__).filter_by(**specification), update_data)
+            await session.commit()
+            return bool(result.rowcount)   # pyright: ignore

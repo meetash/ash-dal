@@ -230,3 +230,34 @@ class AsyncDAOCreateTestCase(AsyncDAOTestCaseBase):
             results = await session.execute(select(ExampleORMModel))
             items = results.all()
             assert len(items) == items_count
+
+
+class AsyncDAOUpdateTestCase(AsyncDAOTestCaseBase):
+    async def _create_record(self):
+        data = {
+            "first_name": self.faker.first_name(),
+            "last_name": self.faker.last_name(),
+            "age": self.faker.pyint(min_value=10, max_value=100),
+        }
+        async with self.db.session as session:
+            db_item = ExampleORMModel(**data)
+            session.add(db_item)
+            await session.commit()
+        return {**data, "id": db_item.id}
+
+    async def test_update(self):
+        created_record = await self._create_record()
+        update_data = {
+            "first_name": self.faker.first_name(),
+            "last_name": self.faker.last_name(),
+            "age": self.faker.pyint(min_value=10, max_value=100),
+        }
+        record_id = created_record.get("id")
+        is_updated = await self.dao.update(specification={"id": record_id}, update_data=update_data)
+        assert is_updated
+        async with self.db.session as session:
+            instance = await session.get(ExampleORMModel, record_id)
+            assert instance
+            assert instance.first_name == update_data["first_name"]
+            assert instance.last_name == update_data["last_name"]
+            assert instance.age == update_data["age"]
