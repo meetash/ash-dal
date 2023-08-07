@@ -78,3 +78,8 @@ class BaseDAO(BaseDAOMixin[Entity]):
             pk_dict: dict[str, t.Any] = result.inserted_primary_key._asdict()  # pyright: ignore
             response_data = {**data, **pk_dict}
             return self._dict_to_entity(dict_=response_data)
+
+    def bulk_create(self, data: t.Sequence[dict[str, t.Any]]):
+        with self.db.session as session:
+            session.execute(insert(self.__model__), data)
+            session.commit()

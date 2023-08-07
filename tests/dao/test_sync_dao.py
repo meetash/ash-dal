@@ -6,6 +6,7 @@ from unittest import TestCase
 from ash_dal import BaseDAO, Database
 from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
+from sqlalchemy import select
 
 from tests.constants import SYNC_DB_URL
 from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
@@ -211,3 +212,18 @@ class SyncDAOCreateTestCase(SyncDAOTestCaseBase):
         with self.db.session as session:
             instance = session.get(ExampleORMModel, entity.id)
             assert instance
+
+    def test_bulk_create(self):
+        items_count = 5
+        data = tuple(
+            {
+                "first_name": self.faker.first_name(),
+                "last_name": self.faker.last_name(),
+                "age": self.faker.pyint(min_value=10, max_value=100),
+            }
+            for _ in range(items_count)
+        )
+        self.dao.bulk_create(data=data)
+        with self.db.session as session:
+            results = session.execute(select(ExampleORMModel)).all()
+            assert len(results) == items_count
