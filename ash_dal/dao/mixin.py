@@ -22,7 +22,7 @@ class BaseDAOMixin(ABC, t.Generic[Entity]):
 
     def _convert_db_item_in_entity(self, db_item: t.Any) -> Entity:
         item_dict = {k: getattr(db_item, k) for k in self._model_columns}
-        return self.__entity__(**item_dict)
+        return self._dict_to_entity(dict_=item_dict)
 
     def _get_entities_from_db_items(
         self,
@@ -30,3 +30,15 @@ class BaseDAOMixin(ABC, t.Generic[Entity]):
     ) -> tuple[Entity, ...]:
         entities = tuple(self._convert_db_item_in_entity(db_item=db_item) for db_item in db_items)
         return entities
+
+    def _dict_to_entity(
+        self,
+        dict_: dict[str, t.Any],
+    ) -> Entity:
+        """
+        Method is responsible for converting ORM model data (represented by a dict) to an entity.
+        This method exists for cases when you entity schema doesn't match ORM Model schema.
+        You can overwrite this method and do all the mappings.
+        """
+        entity = self.__entity__(**dict_)
+        return entity
