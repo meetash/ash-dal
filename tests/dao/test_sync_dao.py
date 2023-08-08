@@ -3,6 +3,7 @@ import random
 from collections import Counter
 from unittest import TestCase
 
+import pytest
 from ash_dal import BaseDAO, Database
 from ash_dal.utils.paginator import PaginatorPage
 from faker import Faker
@@ -258,3 +259,34 @@ class SyncDAOUpdateTestCase(SyncDAOTestCaseBase):
             assert instance.first_name == update_data["first_name"]
             assert instance.last_name == update_data["last_name"]
             assert instance.age == update_data["age"]
+
+    def test_update__empty_specification(self):
+        with pytest.raises(ValueError):
+            self.dao.update(specification={}, update_data={})
+
+
+class SyncDAODeleteTestCase(SyncDAOTestCaseBase):
+    def _create_record(self):
+        data = {
+            "first_name": self.faker.first_name(),
+            "last_name": self.faker.last_name(),
+            "age": self.faker.pyint(min_value=10, max_value=100),
+        }
+        with self.db.session as session:
+            db_item = ExampleORMModel(**data)
+            session.add(db_item)
+            session.commit()
+        return {**data, "id": db_item.id}
+
+    def test_delete(self):
+        created_record = self._create_record()
+        record_id = created_record.get("id")
+        is_deleted = self.dao.delete(specification={"id": record_id})
+        assert is_deleted
+        with self.db.session as session:
+            instance = session.get(ExampleORMModel, record_id)
+            assert not instance
+
+    def test_delete__empty_specification(self):
+        with pytest.raises(ValueError):
+            self.dao.delete(specification={})
