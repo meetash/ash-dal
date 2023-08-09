@@ -227,3 +227,58 @@ if __name__ == '__main__':
     dao = ExampleDAO(database=db)
     entity = asyncio.run(dao.get_by_pk(pk='some-primary-key'))
 ```
+
+### BaseDAO methods
+The main goal of BaseDAO class is to provide CRUD methods that could be useful while building a basic CRUD API. 
+`BaseDAO` class provides the following default methods:
+#### Data fetching methods
+- `BaseDAO.get_by_pk(pk)` - Using this method you can fetch an entity by its primary key.
+    ```python
+    entity = dao.get_by_pk(pk='AWABCD1234')
+    ```
+- `BaseDAO.all` - Using this method you can fetch all entities from the database. It's might be useful for fetching
+    data from small tables where you don't actually need pagination (configs etc)
+    ```python
+    entities = dao.get_all()
+    ```
+- `BaseDAO.get_page(page_index, [page_size])` - Fetch a page with entities by page index. If the index is out of range, 
+    an empty page will be returned. If `page_size` is not passed - the default page size (20) will be applied.
+    ```python
+    page = dao.get_page(page_index=2, page_size=10)
+    for entity in page:
+        # Do some stuff with entity
+        ...
+    ```
+- `BaseDAO.paginate([specification, page_size])` - An iterator that returns pages with entities. A specification
+    can be applied to fetch filtered data.
+    ```python
+    for page in dao.paginate(specification={'status': 'notified'}, page_size=15):
+        # Do some stuff with page
+        ...
+    ```
+- `BaseDAO.filter(specification)` - Fetch entities from database by specification. It's might be useful for fetching
+    filtered data from small tables where you don't actually need pagination (configs etc)
+    ```python
+    entities = dao.filter(specification={'labId': 2})
+    ```
+#### Data manipulation methods
+- `BaseDAO.create(data)` - Create an entity in database based on passed data. Returns back an entity
+    ```python
+    data = {'foo': 'bar'}
+    entity = dao.create(data=data)
+    ```
+- `BaseDAO.bulk_create(data)` - Create multiple entities within one query. Unlike the previous method 
+    this one doesn't return anything.
+    ```python
+    data = [{'foo': 'bar'}, {'foo': 'beer'}]
+    dao.bulk_create(data=data)
+    ```
+- `BaseDAO.update(specification, update_data)` - Patch entity(ies) by specification.
+    ```python
+    update_data = {'foo': 'bar'}
+    is_updated = dao.update(specification={'foo': 'beer'}, update_data=update_data)
+    ```
+- `BaseDAO.remove(specification)` - Remove entity(ies) by specification.
+    ```python
+    is_removed = dao.update(specification={'id': 'some-id'},)
+    ```

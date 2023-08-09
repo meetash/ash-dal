@@ -93,7 +93,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def filter(self, specification: dict[str, t.Any]) -> tuple[Entity, ...]:
         """
-        Fetches entities from database by specification.
+        Fetch entities from database by specification.
         :param specification: a dict that will be used for filtering
         :return: a tuple with entities
         """
@@ -103,7 +103,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def create(self, data: dict[str, t.Any]) -> Entity:
         """
-        Creates an entity in database
+        Create an entity in database
         :param data: a dict that represents entity to be created.
         :return: a created entity instance
         """
@@ -116,7 +116,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def bulk_create(self, data: t.Sequence[dict[str, t.Any]]):
         """
-        Create multiple records by one request
+        Create multiple entities within one query
         :param data: a sequence with dicts that represent entities to be created
         """
         with self.db.session as session:
@@ -125,7 +125,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def update(self, specification: dict[str, t.Any], update_data: dict[str, t.Any]) -> bool:
         """
-        Patches record(s)
+        Patch record(s)
         :param specification: record(s) for updating are chosen based on this specification. If an empy dict is passed,
         a :class:`ValueError` exception will be raised for safety reasons.
         :param update_data: a dict with new values to be written for the chosen record(s)
@@ -140,7 +140,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def delete(self, specification: dict[str, t.Any]) -> bool:
         """
-        Removes record(s).
+        Remove record(s).
         :param specification: record(s) for removing are chosen based on this specification. If an empy dict is passed,
         a :class:`ValueError` exception will be raised for safety reasons.
         :return: a :class:`bool` value that shows either the entity(ies) are removed or not.
