@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.roles import ColumnsClauseRole
 
 from ash_dal.typing import ORMModel
+from ash_dal.utils.paginator.interface import IAsyncPaginator
 from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
 
-class AsyncPaginator(t.Generic[ORMModel]):
+class AsyncPaginator(IAsyncPaginator[ORMModel]):
     def __init__(self, session: AsyncSession, query: Select[t.Any], page_size: int):
         self._session = session
         self._page_size = page_size

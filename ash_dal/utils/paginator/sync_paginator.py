@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.roles import ColumnsClauseRole
 
 from ash_dal.typing import ORMModel
+from ash_dal.utils.paginator.interface import IPaginator
 from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
 
-class Paginator(t.Generic[ORMModel]):
+class Paginator(IPaginator[ORMModel]):
     def __init__(self, session: Session, query: Select[t.Any], page_size: int):
         self._session = session
         self._page_size = page_size
