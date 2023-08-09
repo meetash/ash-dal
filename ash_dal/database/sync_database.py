@@ -40,6 +40,11 @@ class Database:
         return self._session_maker
 
     def connect(self):
+        """
+        Create SQLAlchemy engine(s) and session maker. If read replica information was provided during initialization
+        an engine for read replica will be created as well and all fetching queries will be routed to the read replica.
+        A typical use case is to run this method once your application is starting.
+        """
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
         slave_engine = None
         if self.read_replica_url:
@@ -50,11 +55,18 @@ class Database:
         )
 
     def disconnect(self):
+        """
+        Close connections to DB. A typical use case is to run this method before shutting down your application
+        """
         self._engine.dispose() if hasattr(self, "_engine") else ...
         self._ro_engine.dispose() if hasattr(self, "_ro_engine") and isinstance(self._ro_engine, Engine) else ...
 
     @property
     def session(self) -> Session:
+        """
+        Create a session instance using session maker
+        :return: a session instance
+        """
         return self.session_maker()  # pyright: ignore [ reportOptionalCall ]
 
     @staticmethod

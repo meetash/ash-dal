@@ -40,6 +40,11 @@ class AsyncDatabase:
         return self._session_maker
 
     async def connect(self):
+        """
+        Create SQLAlchemy engine and session maker. If read replica information was provided during initialization
+        an engine for read replica will be created as well and all fetching queries will be routed to the read replica.
+        A typical use case is to run this method once your application is starting.
+        """
         self._engine = self._create_engine(url=self.db_url, ssl_context=self._ssl_context)
         slave_sync_engine = None
         if self.read_replica_url:
@@ -52,12 +57,19 @@ class AsyncDatabase:
         )
 
     async def disconnect(self):
+        """
+        Close connections to DB. A typical use case is to run this method before shutting down your application
+        """
         await self._engine.dispose() if hasattr(self, "_engine") else ...
         if hasattr(self, "_ro_engine") and isinstance(self._ro_engine, AsyncEngine):
             await self._ro_engine.dispose()
 
     @property
     def session(self) -> AsyncSession:
+        """
+        Create a session instance using session maker
+        :return: a session instance
+        """
         return self.session_maker()  # pyright: ignore [ reportOptionalCall ]
 
     @staticmethod
