@@ -35,7 +35,7 @@ commands:
   up-dbs:
     description: Run Master and slave DBs in docker
     cmd: |
-      docker compose up -d
+      docker compose up --build -d
       sleep 15;
       . ./docker_files/setup_db.sh
 
