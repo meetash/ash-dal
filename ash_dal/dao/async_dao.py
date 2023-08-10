@@ -2,21 +2,19 @@ import typing as t
 
 from sqlalchemy import delete, insert, select, update
 
-from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
+from ash_dal.dao.mixin import BaseDAOMixin
 from ash_dal.database import AsyncDatabase
 from ash_dal.typing import Entity
 from ash_dal.utils import AsyncPaginator
 from ash_dal.utils.paginator import PaginatorPage
+from ash_dal.utils.paginator.interface import IAsyncPaginator
 
 
 class AsyncBaseDAO(BaseDAOMixin[Entity]):
+    __paginator_factory__: t.Callable[..., IAsyncPaginator[t.Any]] = AsyncPaginator
+
     def __init__(self, database: AsyncDatabase):
         self._db = database
-        self._config = self.Config()
-
-    class Config:
-        paginator_class: type[AsyncPaginator[t.Any]] = AsyncPaginator
-        default_page_size: int = DEFAULT_PAGE_SIZE
 
     @property
     def db(self) -> AsyncDatabase:
@@ -61,8 +59,8 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         :return: An instance of :class:`PaginatorPage` that includes entities.
         """
         async with self.db.session as session:
-            paginator = self._config.paginator_class(
-                session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
+            paginator = self.__paginator_factory__(
+                session=session, query=select(self.__model__), page_size=page_size or self.__default_page_size__
             )
             page = await paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
@@ -83,10 +81,10 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
             query = select(self.__model__)
             if specification:
                 query = query.filter_by(**specification)
-            paginator = self._config.paginator_class(
+            paginator = self.__paginator_factory__(
                 session=session,
                 query=query,
-                page_size=page_size or self._config.default_page_size,
+                page_size=page_size or self.__default_page_size__,
             )
             async for page in paginator.paginate():
                 entities = self._get_entities_from_db_items(db_items=page)

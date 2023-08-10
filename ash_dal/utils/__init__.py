@@ -2,6 +2,7 @@ from ash_dal.utils.paginator import (
     AsyncDeferredJoinPaginator,
     AsyncPaginator,
     DeferredJoinPaginator,
+    DeferredJoinPaginatorFactory,
     Paginator,
     PaginatorPage,
 )
@@ -14,4 +15,5 @@ __all__ = [
     "AsyncPaginator",
     "AsyncDeferredJoinPaginator",
     "PaginatorPage",
+    "DeferredJoinPaginatorFactory",
 ]

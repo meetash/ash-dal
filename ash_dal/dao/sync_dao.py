@@ -2,21 +2,19 @@ import typing as t
 
 from sqlalchemy import delete, insert, select, update
 
-from ash_dal.dao.mixin import DEFAULT_PAGE_SIZE, BaseDAOMixin
+from ash_dal.dao.mixin import BaseDAOMixin
 from ash_dal.database import Database
 from ash_dal.typing import Entity
 from ash_dal.utils import Paginator
 from ash_dal.utils.paginator import PaginatorPage
+from ash_dal.utils.paginator.interface import IPaginator
 
 
 class BaseDAO(BaseDAOMixin[Entity]):
+    __paginator_factory__: t.Callable[..., IPaginator[t.Any]] = Paginator
+
     def __init__(self, database: Database):
         self._db = database
-        self._config = self.Config()
-
-    class Config:
-        paginator_class: type[Paginator[t.Any]] = Paginator
-        default_page_size: int = DEFAULT_PAGE_SIZE
 
     @property
     def db(self) -> Database:
@@ -60,8 +58,8 @@ class BaseDAO(BaseDAOMixin[Entity]):
         :return: An instance of :class:`PaginatorPage` that includes entities.
         """
         with self.db.session as session:
-            paginator = self._config.paginator_class(
-                session=session, query=select(self.__model__), page_size=page_size or self._config.default_page_size
+            paginator = self.__paginator_factory__(
+                session=session, query=select(self.__model__), page_size=page_size or self.__default_page_size__
             )
             page = paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
@@ -82,10 +80,10 @@ class BaseDAO(BaseDAOMixin[Entity]):
             query = select(self.__model__)
             if specification:
                 query = query.filter_by(**specification)
-            paginator = self._config.paginator_class(
+            paginator = self.__paginator_factory__(
                 session=session,
                 query=query,
-                page_size=page_size or self._config.default_page_size,
+                page_size=page_size or self.__default_page_size__,
             )
             for page_index, page in enumerate(paginator.paginate()):
                 entities = self._get_entities_from_db_items(db_items=page)
