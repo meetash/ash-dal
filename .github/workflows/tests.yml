@@ -28,7 +28,7 @@ jobs:
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
           pytest-root-dir: .
-          cov-omit-list: tests/*, ash_dal/utils/paginator/abstract.py
+          cov-omit-list: tests/*, ash_dal/utils/paginator/interface.py
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
           async-tests: true

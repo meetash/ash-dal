@@ -2,4 +2,4 @@
 show_missing = true
 
 [run]
-omit = tests/*, ash_dal/utils/paginator/abstract.py
+omit = tests/*, ash_dal/utils/paginator/interface.py
