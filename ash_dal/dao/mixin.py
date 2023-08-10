@@ -13,6 +13,7 @@ DEFAULT_PAGE_SIZE = 20
 class BaseDAOMixin(ABC, t.Generic[Entity]):
     __entity__: type[Entity]
     __model__: type[ORMModel]  # pyright: ignore [reportGeneralTypeIssues]
+    __default_page_size__: int = DEFAULT_PAGE_SIZE
 
     @cached_property
     def _model_columns(self) -> tuple[str, ...]:

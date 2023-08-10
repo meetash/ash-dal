@@ -4,8 +4,8 @@ from collections import Counter
 from unittest import TestCase
 
 import pytest
-from ash_dal import BaseDAO, Database
-from ash_dal.utils.paginator import PaginatorPage
+from ash_dal import BaseDAO, Database, DeferredJoinPaginator, PaginatorPage
+from ash_dal.utils import DeferredJoinPaginatorFactory
 from faker import Faker
 from sqlalchemy import select
 
@@ -16,6 +16,13 @@ from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
 class ExampleDAO(BaseDAO[ExampleEntity]):
     __entity__ = ExampleEntity
     __model__ = ExampleORMModel
+
+
+class ExampleDAOCustomPaginator(ExampleDAO):
+    __paginator_factory__ = DeferredJoinPaginatorFactory[DeferredJoinPaginator](
+        paginator_class=DeferredJoinPaginator,
+        pk_field=ExampleORMModel.id,
+    )
 
 
 class SyncDAOTestCaseBase(TestCase):
@@ -97,7 +104,7 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         results = self.dao.get_page()
         assert results
         assert isinstance(results, PaginatorPage)
-        assert len(results) == self.dao.Config.default_page_size
+        assert len(results) == self.dao.__default_page_size__
         assert isinstance(results[0], ExampleEntity)
 
     def test_get_page__custom_page_size(self):
@@ -121,7 +128,7 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         assert isinstance(results, PaginatorPage)
 
     def test_paginate__default_page_size(self):
-        page_size = self.dao.Config.default_page_size
+        page_size = self.dao.__default_page_size__
         pages_count = math.ceil(self.records_count / page_size)
         pages_counter = 0
         for page in self.dao.paginate():
@@ -199,6 +206,12 @@ class SyncDAOFetchFilteredTestCase(SyncDAOFetchingTestCaseBase):
             assert isinstance(page[0], ExampleEntity)
             page_counter += 1
         assert page_counter == pages_count
+
+
+class SyncDAOCustomPaginatorUseCase(SyncDAOFetchAllTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.dao = ExampleDAOCustomPaginator(database=self.db)
 
 
 class SyncDAOCreateTestCase(SyncDAOTestCaseBase):

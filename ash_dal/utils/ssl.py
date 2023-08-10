@@ -8,6 +8,15 @@ def prepare_ssl_context(
     server_ca_path: str | Path,
     ssl_root_dir: str | Path | None = None,
 ) -> ssl.SSLContext:
+    """
+    Creates and returns an object of :class:`ssl.SSLContext` class from key files.
+    :param client_cert_path: Absolute path to client cert file. Can be relative if `sss_root_dir` parameter is passed.
+    :param client_key_path: Absolute path to client key file. Can be relative if `sss_root_dir` parameter is passed.
+    :param server_ca_path: Absolute path to server ca file. Can be relative if `sss_root_dir` parameter is passed.
+    :param ssl_root_dir: Path to the directory with key files. If passed, you can provide relative paths to the files
+    instead of absolute ones.
+    :return:
+    """
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     if ssl_root_dir:
         client_cert_path = Path(ssl_root_dir, client_cert_path)
