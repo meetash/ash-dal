@@ -7,11 +7,11 @@ from ash_dal.database import Database
 from ash_dal.typing import Entity
 from ash_dal.utils import Paginator
 from ash_dal.utils.paginator import PaginatorPage
-from ash_dal.utils.paginator.interface import IPaginator
+from ash_dal.utils.paginator.interface import PaginatorFactoryProtocol
 
 
 class BaseDAO(BaseDAOMixin[Entity]):
-    __paginator_factory__: t.Callable[..., IPaginator[t.Any]] = Paginator
+    __paginator_factory__: PaginatorFactoryProtocol = Paginator
 
     def __init__(self, database: Database):
         self._db = database

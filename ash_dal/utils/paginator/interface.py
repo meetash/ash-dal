@@ -1,6 +1,10 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+from sqlalchemy import Select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
 from ash_dal.typing import ORMModel
 from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
@@ -32,4 +36,14 @@ class IAsyncPaginator(t.Generic[ORMModel], ABC):
     @property
     @abstractmethod
     async def size(self) -> int:
+        ...
+
+
+class PaginatorFactoryProtocol(t.Protocol):
+    def __call__(self, session: Session, query: Select[t.Any], page_size: int) -> IPaginator[t.Any]:
+        ...
+
+
+class AsyncPaginatorFactoryProtocol(t.Protocol):
+    def __call__(self, session: AsyncSession, query: Select[t.Any], page_size: int) -> IAsyncPaginator[t.Any]:
         ...

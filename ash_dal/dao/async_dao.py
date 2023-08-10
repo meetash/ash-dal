@@ -7,11 +7,11 @@ from ash_dal.database import AsyncDatabase
 from ash_dal.typing import Entity
 from ash_dal.utils import AsyncPaginator
 from ash_dal.utils.paginator import PaginatorPage
-from ash_dal.utils.paginator.interface import IAsyncPaginator
+from ash_dal.utils.paginator.interface import AsyncPaginatorFactoryProtocol
 
 
 class AsyncBaseDAO(BaseDAOMixin[Entity]):
-    __paginator_factory__: t.Callable[..., IAsyncPaginator[t.Any]] = AsyncPaginator
+    __paginator_factory__: AsyncPaginatorFactoryProtocol = AsyncPaginator
 
     def __init__(self, database: AsyncDatabase):
         self._db = database
