@@ -152,9 +152,6 @@ class ExampleDAO(BaseDAO[ExampleEntity]):
     __entity__ = ExampleEntity
     __model__ = ExampleORMModel
 
-    def __init__(self, database: Database):
-        self._db = database
-
 
 if __name__ == '__main__':
     db = Database(
@@ -208,9 +205,6 @@ class ExampleEntity:
 class ExampleDAO(AsyncBaseDAO[ExampleEntity]):
     __entity__ = ExampleEntity
     __model__ = ExampleORMModel
-
-    def __init__(self, database: AsyncDatabase):
-        self._db = database
 
 
 if __name__ == '__main__':
@@ -278,7 +272,85 @@ The main goal of BaseDAO class is to provide CRUD methods that could be useful w
     update_data = {'foo': 'bar'}
     is_updated = dao.update(specification={'foo': 'beer'}, update_data=update_data)
     ```
-- `BaseDAO.remove(specification)` - Remove entity(ies) by specification.
+- `BaseDAO.delete(specification)` - Remove entity(ies) by specification.
     ```python
-    is_removed = dao.update(specification={'id': 'some-id'},)
+    is_removed = dao.delete(specification={'id': 'some-id'},)
     ```
+
+## Pagination strategies
+
+By default the BaseDAO class uses the simplest pagination strategy that is based on SQL offset & limit mechanisms.
+The library provides one more strategy out of the box that is called deferred join pagination. 
+You can learn more about it [here](https://planetscale.com/learn/courses/mysql-for-developers/examples/deferred-joins). 
+
+If you want to change the pagination strategy for you DAO class, you can do it by re-defining 
+the `__paginator_factory__` field inside your DAO class:
+```python
+from ash_dal import BaseDAO, DeferredJoinPaginator
+from ash_dal.utils import DeferredJoinPaginatorFactory, AsyncDeferredJoinPaginator
+
+class ExampleEntity:
+    ...
+
+class ExampleORMModel:
+    id: int
+    ...
+
+class ExampleDAO(BaseDAO[ExampleEntity]):
+    __entity__ = ExampleEntity
+    __model__ = ExampleORMModel
+    __paginator_factory__ = DeferredJoinPaginatorFactory(
+        paginator_class=DeferredJoinPaginator,
+        pk_field=ExampleORMModel.id,
+    )
+
+# OR async
+
+class ExampleAsyncDAO(BaseDAO[ExampleEntity]):
+    __entity__ = ExampleEntity
+    __model__ = ExampleORMModel
+    __paginator_factory__ = DeferredJoinPaginatorFactory(
+        paginator_class=AsyncDeferredJoinPaginator,
+        pk_field=ExampleORMModel.id,
+    )
+```
+### Custom pagination strategy
+You can also define your own pagination strategy. Be aware that your paginator class should implement IPaginator or 
+IAsyncPaginator interfaces:
+
+```python
+from ash_dal.utils.paginator.interface import IPaginator, IAsyncPaginator
+from ash_dal import PaginatorPage
+import typing as t
+
+class ExampleORM:
+    ...
+
+class MyPaginator(IPaginator[ExampleORM]):
+    def get_page(self, page_index: int) -> PaginatorPage[ExampleORM]:
+        # Do page fetching
+        ...
+
+    def paginate(self) -> t.Iterator[PaginatorPage[ExampleORM]]:
+        # Do pagination
+        ...
+    @property
+    def size(self) -> int:
+        # Get pages count
+        return 10
+
+# or async paginator
+
+class MyAsyncPaginator(IAsyncPaginator[ExampleORM]):
+    async def get_page(self, page_index: int) -> PaginatorPage[ExampleORM]:
+        # Do page fetching asynchronously
+        ...
+
+    async def paginate(self) -> t.AsyncIterator[PaginatorPage[ExampleORM]]:
+        # Do pagination asynchronously
+        ...
+    @property
+    async def size(self) -> int:
+        # Get pages count asynchronously
+        return 10
+```
