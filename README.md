@@ -5,7 +5,13 @@ The library provides a standardized way to connect to DB, and Base DAO class imp
 
 ### PyPi
 
-*To be added*
+```shell
+pip install ash-dal
+
+# OR
+
+poetry add ash-dal
+```
 
 ### From github
 In order to install Ash DAL directly from GitHub repository, run:
