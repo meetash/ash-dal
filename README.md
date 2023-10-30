@@ -22,6 +22,14 @@ pip install git+https://github.com/meetash/ash-dal.git@main
 
 poetry add git+https://github.com/meetash/ash-dal.git@main
 ```
+
+### Available extras
+- pymysql
+- aiomysql
+- psycopg
+- asyncpg
+
+
 ## Usage
 ### Database class
 There are two options: sync or async database connection.
