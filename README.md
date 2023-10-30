@@ -6,11 +6,11 @@ The library provides a standardized way to connect to DB, and Base DAO class imp
 ### PyPi
 
 ```shell
-pip install ash-dal
+pip install 'ash-dal[pymysql]'
 
 # OR
 
-poetry add ash-dal
+poetry add ash-dal --extras pymysql
 ```
 
 ### From github
