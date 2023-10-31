@@ -24,6 +24,13 @@ jobs:
       - id: create-databases
         run: |
           lets up-dbs
+      - name: Set up poetry
+        uses: Gr1N/setup-poetry@v8
+        with:
+          poetry-version: "1.6.1"
+      - name: Install dependencies
+        run: |
+          poetry install --extras "pymysql aiomysql"
       - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.1
         with:
@@ -32,7 +39,6 @@ jobs:
           cov-threshold-single: ${{ env.COVERAGE_SINGLE }}
           cov-threshold-total: ${{ env.COVERAGE_TOTAL }}
           async-tests: true
-          poetry-version: 1.4.2
       - name: Generate XML coverage report
         run: |
           coverage xml
