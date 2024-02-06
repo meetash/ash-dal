@@ -51,7 +51,7 @@ class DeferredJoinPaginator(Paginator[ORMModel]):
         )
         stmt = self._query.join(
             target=deferred_join_subquery,
-            onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportGeneralTypeIssues]
+            onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportArgumentType]
         )
         page: t.Sequence[ORMModel] = self._session.scalars(stmt).all()
         return PaginatorPage(index=page_index, items=tuple(page))
