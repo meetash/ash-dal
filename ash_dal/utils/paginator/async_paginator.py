@@ -52,7 +52,7 @@ class AsyncDeferredJoinPaginator(AsyncPaginator[ORMModel]):
         )
         stmt = self._query.join(
             target=deferred_join_subquery,
-            onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportGeneralTypeIssues]
+            onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportArgumentType]
         )
         result = await self._session.scalars(stmt)
         page: t.Sequence[ORMModel] = result.all()
