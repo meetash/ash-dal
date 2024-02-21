@@ -32,7 +32,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
         :return: Entity instance or None if the record is not found
         """
         with self.db.session as session:
-            db_item = session.get(self.__model__, pk)
+            db_item = session.get(self.__model__, pk, options=self.__default_load_options__)
             if not db_item:
                 return None
             return self._convert_db_item_in_entity(db_item=db_item)
@@ -43,7 +43,9 @@ class BaseDAO(BaseDAOMixin[Entity]):
         :return: a tuple with entities
         """
         with self.db.session as session:
-            db_items = session.scalars(select(self.__model__))
+            db_items = session.scalars(select(self.__model__).options(*self.__default_load_options__))
+            if self.__default_load_options__:
+                db_items = db_items.unique().all()
             return self._get_entities_from_db_items(db_items=db_items)
 
     def get_page(
@@ -59,7 +61,9 @@ class BaseDAO(BaseDAOMixin[Entity]):
         """
         with self.db.session as session:
             paginator = self.__paginator_factory__(
-                session=session, query=select(self.__model__), page_size=page_size or self.__default_page_size__
+                session=session,
+                query=select(self.__model__).options(*self.__default_load_options__),
+                page_size=page_size or self.__default_page_size__,
             )
             page = paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
@@ -77,7 +81,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
         :return: :class:`t.Iterator` that returns :class:`PaginatorPage` with entities
         """
         with self.db.session as session:
-            query = select(self.__model__)
+            query = select(self.__model__).options(*self.__default_load_options__)
             if specification:
                 query = query.filter_by(**specification)
             paginator = self.__paginator_factory__(
@@ -96,7 +100,11 @@ class BaseDAO(BaseDAOMixin[Entity]):
         :return: a tuple with entities
         """
         with self.db.session as session:
-            db_items = session.scalars(select(self.__model__).filter_by(**specification))
+            db_items = session.scalars(
+                select(self.__model__).filter_by(**specification).options(*self.__default_load_options__),
+            )
+            if self.__default_load_options__:
+                db_items = db_items.unique().all()
             return self._get_entities_from_db_items(db_items=db_items)
 
     def create(self, data: dict[str, t.Any]) -> Entity:

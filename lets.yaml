@@ -9,7 +9,7 @@ env:
 
 commands:
 
-  format:
+  fmt:
     description: Run code auto formatting tools tools
     cmd: |
       echo ${CYAN}"> Black"${CLEAR}
@@ -31,6 +31,8 @@ commands:
     description: Run project tests
     cmd: |
       pytest --cov=${SRC_PATH} --color=yes "${LETS_COMMAND_ARGS}"
+    depends:
+      - up-dbs
 
   up-dbs:
     description: Run Master and slave DBs in docker

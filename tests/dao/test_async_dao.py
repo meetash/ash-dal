@@ -8,6 +8,7 @@ from ash_dal import AsyncBaseDAO, AsyncDatabase, AsyncDeferredJoinPaginator, Pag
 from ash_dal.utils import DeferredJoinPaginatorFactory
 from faker import Faker
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from tests.constants import ASYNC_DB_URL
 from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
@@ -16,6 +17,7 @@ from tests.dao.infrastructure import ExampleEntity, ExampleORMModel
 class ExampleAsyncDAO(AsyncBaseDAO[ExampleEntity]):
     __entity__ = ExampleEntity
     __model__ = ExampleORMModel
+    __default_load_options__ = (joinedload(ExampleORMModel.children),)
 
 
 class ExampleDAOCustomPaginator(ExampleAsyncDAO):
