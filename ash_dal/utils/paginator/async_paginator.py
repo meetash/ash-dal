@@ -20,7 +20,7 @@ class AsyncPaginator(IAsyncPaginator[ORMModel]):
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
         result = await self._session.scalars(page_stmt)
-        page: t.Sequence[ORMModel] = result.all()
+        page: t.Sequence[ORMModel] = result.unique().all()
         return PaginatorPage(index=page_index, items=tuple(page))
 
     async def paginate(self) -> t.AsyncIterator[PaginatorPage[ORMModel]]:
@@ -55,5 +55,5 @@ class AsyncDeferredJoinPaginator(AsyncPaginator[ORMModel]):
             onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportArgumentType]
         )
         result = await self._session.scalars(stmt)
-        page: t.Sequence[ORMModel] = result.all()
+        page: t.Sequence[ORMModel] = result.unique().all()
         return PaginatorPage(index=page_index, items=tuple(page))

@@ -15,6 +15,13 @@ services:
       - MYSQL_PASSWORD=S3cret
     networks:
       - mynetwork
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 --password=S3cret
+      start_period: 5s
+      interval: 3s
+      timeout: 1s
+      retries: 20
+
   database_slave:
     image: mysql:8.0.30
     container_name: "database_slave"
@@ -32,5 +39,11 @@ services:
       - MYSQL_PASSWORD=S3cret
     networks:
       - mynetwork
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 --password=S3cret
+      start_period: 5s
+      interval: 3s
+      timeout: 1s
+      retries: 20
 networks:
   mynetwork:

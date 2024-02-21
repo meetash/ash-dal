@@ -32,7 +32,7 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         :return: Entity instance or None if the record is not found
         """
         async with self.db.session as session:
-            db_item = await session.get(self.__model__, pk)
+            db_item = await session.get(self.__model__, pk, options=self.__default_load_options__)
             if not db_item:
                 return None
             item_dict = {k: getattr(db_item, k) for k in self._model_columns}
@@ -44,7 +44,9 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         :return: a tuple with entities
         """
         async with self.db.session as session:
-            db_items = await session.scalars(select(self.__model__))
+            db_items = await session.scalars(select(self.__model__).options(*self.__default_load_options__))
+            if self.__default_load_options__:
+                db_items = db_items.unique().all()
             return self._get_entities_from_db_items(db_items=db_items)
 
     async def get_page(
@@ -60,7 +62,9 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         """
         async with self.db.session as session:
             paginator = self.__paginator_factory__(
-                session=session, query=select(self.__model__), page_size=page_size or self.__default_page_size__
+                session=session,
+                query=select(self.__model__).options(*self.__default_load_options__),
+                page_size=page_size or self.__default_page_size__,
             )
             page = await paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
@@ -78,7 +82,7 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         :return: :class:`t.Iterator` that returns :class:`PaginatorPage` with entities
         """
         async with self.db.session as session:
-            query = select(self.__model__)
+            query = select(self.__model__).options(*self.__default_load_options__)
             if specification:
                 query = query.filter_by(**specification)
             paginator = self.__paginator_factory__(
@@ -97,7 +101,11 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         :return: a tuple with entities
         """
         async with self.db.session as session:
-            db_items = await session.scalars(select(self.__model__).filter_by(**specification))
+            db_items = await session.scalars(
+                select(self.__model__).filter_by(**specification).options(*self.__default_load_options__),
+            )
+            if self.__default_load_options__:
+                db_items = db_items.unique().all()
             return self._get_entities_from_db_items(db_items=db_items)
 
     async def create(self, data: dict[str, t.Any]) -> Entity:

@@ -3,6 +3,7 @@ from abc import ABC
 from functools import cached_property
 
 from sqlalchemy import ScalarResult, inspect
+from sqlalchemy.orm.interfaces import ORMOption
 
 from ash_dal.typing import Entity, ORMModel
 from ash_dal.utils.paginator import PaginatorPage
@@ -14,6 +15,8 @@ class BaseDAOMixin(ABC, t.Generic[Entity]):
     __entity__: type[Entity]
     __model__: type[ORMModel]  # pyright: ignore [reportGeneralTypeIssues]
     __default_page_size__: int = DEFAULT_PAGE_SIZE
+
+    __default_load_options__: t.Sequence[ORMOption] = ()
 
     @cached_property
     def _model_columns(self) -> tuple[str, ...]:
