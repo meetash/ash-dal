@@ -11,6 +11,8 @@ from ash_dal.utils.paginator.paginator_page import PaginatorPage
 
 
 class Paginator(IPaginator[ORMModel]):
+    _size: int | None = None
+
     def __init__(self, session: Session, query: Select[t.Any], page_size: int):
         self._session = session
         self._page_size = page_size
@@ -20,7 +22,7 @@ class Paginator(IPaginator[ORMModel]):
         offset = page_index * self._page_size
         page_stmt = self._query.offset(offset).limit(self._page_size)
         page: t.Sequence[ORMModel] = self._session.scalars(page_stmt).unique().all()
-        return PaginatorPage(index=page_index, items=tuple(page))
+        return PaginatorPage(index=page_index, items=tuple(page), pages_count=self.size)
 
     def paginate(self) -> t.Iterator[PaginatorPage[ORMModel]]:
         current_page = 0
@@ -34,9 +36,11 @@ class Paginator(IPaginator[ORMModel]):
     @property
     def size(self) -> int:
         """Returns the count of pages the requested resource has"""
-        stmt = select(func.count()).select_from(self._query.subquery())
-        items_count: int = self._session.scalar(stmt) or 0
-        return math.ceil(items_count / self._page_size)
+        if self._size is None:
+            stmt = select(func.count()).select_from(self._query.subquery())
+            items_count: int = self._session.scalar(stmt) or 0
+            self._size = math.ceil(items_count / self._page_size)
+        return self._size
 
 
 class DeferredJoinPaginator(Paginator[ORMModel]):
@@ -54,4 +58,4 @@ class DeferredJoinPaginator(Paginator[ORMModel]):
             onclause=self._pk_field == deferred_join_subquery.c[0],  # pyright: ignore [reportArgumentType]
         )
         page: t.Sequence[ORMModel] = self._session.scalars(stmt).unique().all()
-        return PaginatorPage(index=page_index, items=tuple(page))
+        return PaginatorPage(index=page_index, items=tuple(page), pages_count=self.size)

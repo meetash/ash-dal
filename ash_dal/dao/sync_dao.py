@@ -67,7 +67,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
             )
             page = paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
-            return PaginatorPage(index=page_index, items=entities)
+            return PaginatorPage(index=page_index, items=entities, pages_count=paginator.size)
 
     def paginate(
         self,
@@ -91,7 +91,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
             )
             for page_index, page in enumerate(paginator.paginate()):
                 entities = self._get_entities_from_db_items(db_items=page)
-                yield PaginatorPage(index=page_index, items=entities)
+                yield PaginatorPage(index=page_index, items=entities, pages_count=paginator.size)
 
     def filter(self, specification: dict[str, t.Any]) -> tuple[Entity, ...]:
         """
