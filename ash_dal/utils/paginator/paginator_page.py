@@ -7,6 +7,7 @@ T = t.TypeVar("T")
 @dataclass
 class PaginatorPage(t.Generic[T]):
     index: int
+    pages_count: int
     items: tuple[T, ...]
 
     def __len__(self) -> int:
