@@ -73,13 +73,14 @@ class AsyncDatabase:
         return self.session_maker()  # pyright: ignore [ reportOptionalCall ]
 
     @staticmethod
-    def _create_engine(url: URL, ssl_context: ssl.SSLContext | None) -> AsyncEngine:
+    def _create_engine(url: URL, ssl_context: ssl.SSLContext | None, hide_parameters: bool = True) -> AsyncEngine:
         connect_args = {"ssl": ssl_context} if ssl_context else {}
         try:
             engine = create_async_engine(
                 url,
                 connect_args=connect_args,
                 pool_pre_ping=True,
+                hide_parameters=hide_parameters,
             )
             return engine
         except Exception as ex:
