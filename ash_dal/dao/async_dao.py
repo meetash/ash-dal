@@ -133,7 +133,7 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         if not specification:
             raise ValueError("Specification should be passed")
         async with self.db.session as session:
-            result = await session.execute(update(self.__model__).filter_by(**specification), update_data)
+            result = await session.execute(update(self.__model__).filter_by(**specification).values(update_data))
             await session.commit()
             return bool(result.rowcount)  # pyright: ignore
 
