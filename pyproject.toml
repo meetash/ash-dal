@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ash-dal"
-version = "0.2.0"
+version = "0.2.1"
 description = "The library provides a standardized way to connect to DB, and Base DAO class implementation"
 authors = ["Dmitry Marchuk <dmarchuk@remedypointsolutions.com>"]
 readme = "README.md"
