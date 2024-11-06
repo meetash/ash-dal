@@ -140,7 +140,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
         if not specification:
             raise ValueError("Specification should be passed")
         with self.db.session as session:
-            result = session.execute(update(self.__model__).filter_by(**specification), update_data)
+            result = session.execute(update(self.__model__).filter_by(**specification).values(update_data))
             session.commit()
             return bool(result.rowcount)  # pyright: ignore
 
