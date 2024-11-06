@@ -1,4 +1,3 @@
-version: "3.5"
 services:
   database_master:
     image: mysql:8.0.30
