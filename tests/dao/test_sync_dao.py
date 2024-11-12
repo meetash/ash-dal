@@ -115,6 +115,11 @@ class SyncDAOFetchAllTestCase(SyncDAOFetchingTestCaseBase):
         assert results
         assert len(results) == page_size
 
+    def test_get_page__specification_passed(self):
+        results = self.dao.get_page(specification={"id": 1})
+        assert results
+        assert len(results) == 1
+
     def test_get_page__defined_page_index(self):
         page_index = self.faker.pyint(min_value=1, max_value=4)
         page_size = 10
