@@ -2,6 +2,7 @@ import typing as t
 
 from sqlalchemy import delete, insert, select, update
 
+from ash_dal.constants import PAGINATOR_FIRST_PAGE_INDEX
 from ash_dal.dao.mixin import BaseDAOMixin
 from ash_dal.database import AsyncDatabase
 from ash_dal.typing import Entity
@@ -51,7 +52,7 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
 
     async def get_page(
         self,
-        page_index: int = 0,
+        page_index: int = PAGINATOR_FIRST_PAGE_INDEX,
         page_size: int | None = None,
         specification: dict[str, t.Any] | None = None,
     ) -> PaginatorPage[Entity]:
