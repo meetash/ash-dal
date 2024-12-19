@@ -2,6 +2,7 @@ import typing as t
 
 from sqlalchemy import delete, insert, select, update
 
+from ash_dal.constants import PAGINATOR_FIRST_PAGE_INDEX
 from ash_dal.dao.mixin import BaseDAOMixin
 from ash_dal.database import Database
 from ash_dal.typing import Entity
@@ -50,7 +51,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
 
     def get_page(
         self,
-        page_index: int = 0,
+        page_index: int = PAGINATOR_FIRST_PAGE_INDEX,
         page_size: int | None = None,
         specification: dict[str, t.Any] | None = None,
     ) -> PaginatorPage[Entity]:
@@ -73,7 +74,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
             )
             page = paginator.get_page(page_index=page_index)
             entities = self._get_entities_from_db_items(db_items=page)
-            return PaginatorPage(index=page_index, items=entities)
+            return PaginatorPage(index=page_index, items=entities, pages_count=paginator.size)
 
     def paginate(
         self,
@@ -97,7 +98,7 @@ class BaseDAO(BaseDAOMixin[Entity]):
             )
             for page_index, page in enumerate(paginator.paginate()):
                 entities = self._get_entities_from_db_items(db_items=page)
-                yield PaginatorPage(index=page_index, items=entities)
+                yield PaginatorPage(index=page_index, items=entities, pages_count=paginator.size)
 
     def filter(self, specification: dict[str, t.Any]) -> tuple[Entity, ...]:
         """

@@ -1,16 +1,20 @@
 import math
+from abc import ABC, abstractmethod
 from unittest import IsolatedAsyncioTestCase
 
 from ash_dal import AsyncDatabase
 from ash_dal.utils import AsyncDeferredJoinPaginator, AsyncPaginator
+from ash_dal.utils.paginator.interface import IAsyncPaginator
 from faker import Faker
-from sqlalchemy import select
+from parameterized import parameterized
+from sqlalchemy import Select, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.constants import ASYNC_DB_URL
 from tests.utils.paginator.infrastructure import ExampleORMModel
 
 
-class AsyncPaginatorTestCaseBase(IsolatedAsyncioTestCase):
+class AsyncPaginatorTestCaseBase(ABC):
     async def asyncSetUp(self) -> None:
         self.faker = Faker()
         self.records_count = 100
@@ -39,14 +43,15 @@ class AsyncPaginatorTestCaseBase(IsolatedAsyncioTestCase):
             session.add_all(records)
             await session.commit()
 
+    @abstractmethod
+    def _build_paginator(self, query: Select, session: AsyncSession) -> IAsyncPaginator:
+        ...
 
-class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator[ExampleORMModel](
+            paginator = self._build_paginator(
                 session=session,
                 query=select(ExampleORMModel),
-                page_size=self.page_size,
             )
             counter = 0
             async for page in paginator.paginate():
@@ -59,10 +64,9 @@ class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
     async def test_paginator__paginate_with_condition(self):
         id_offset = 55
         async with self.db.session as session:
-            paginator = AsyncPaginator[ExampleORMModel](
+            paginator = self._build_paginator(
                 session=session,
                 query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
-                page_size=self.page_size,
             )
             counter = 0
             async for page in paginator.paginate():
@@ -73,67 +77,50 @@ class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase):
 
     async def test_paginator__get_page_by_index(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator[ExampleORMModel](
+            paginator = self._build_paginator(
                 session=session,
                 query=select(ExampleORMModel),
-                page_size=self.page_size,
             )
             page = await paginator.get_page(page_index=3)
             assert page
             assert len(page) == self.page_size
 
-    async def test_paginator__size(self):
+    async def test_paginator__get_page_by_index__page_has_pages_count(self):
         async with self.db.session as session:
-            paginator = AsyncPaginator[ExampleORMModel](
+            expected_pages_count = math.ceil(self.records_count / self.page_size)
+            paginator = self._build_paginator(
                 session=session,
                 query=select(ExampleORMModel),
-                page_size=self.page_size,
+            )
+            page = await paginator.get_page(page_index=3)
+            assert page.pages_count == expected_pages_count
+
+    @parameterized.expand((10, 20, 50, 100, 200))
+    async def test_paginator__size(self, page_size):
+        self.page_size = page_size
+        async with self.db.session as session:
+            paginator = self._build_paginator(
+                session=session,
+                query=select(ExampleORMModel),
             )
             size = await paginator.size
             assert size == math.ceil(self.records_count / self.page_size)
 
 
-class AsyncDeferredJoinPaginatorTestCase(AsyncPaginatorTestCaseBase):
-    async def test_paginator__paginate(self):
-        async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
-                session=session,
-                query=select(ExampleORMModel),
-                page_size=self.page_size,
-                pk_field=ExampleORMModel.id,
-            )
-            counter = 0
-            async for page in paginator.paginate():
-                assert page
-                assert len(page) <= self.page_size
-                assert isinstance(page[0], ExampleORMModel)
-                counter += 1
-            assert counter == math.ceil(self.records_count / self.page_size)
+class AsyncPaginatorTestCase(AsyncPaginatorTestCaseBase, IsolatedAsyncioTestCase):
+    def _build_paginator(self, query: Select, session: AsyncSession) -> IAsyncPaginator:
+        return AsyncPaginator[ExampleORMModel](
+            session=session,
+            query=query,
+            page_size=self.page_size,
+        )
 
-    async def test_paginator__paginate_with_condition(self):
-        id_offset = 55
-        async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
-                session=session,
-                query=select(ExampleORMModel).where(ExampleORMModel.id > id_offset),
-                page_size=self.page_size,
-                pk_field=ExampleORMModel.id,
-            )
-            counter = 0
-            async for page in paginator.paginate():
-                assert page
-                assert len(page) <= self.page_size
-                counter += 1
-            assert counter == math.ceil((self.records_count - id_offset) / self.page_size)
 
-    async def test_paginator__get_page_by_index(self):
-        async with self.db.session as session:
-            paginator = AsyncDeferredJoinPaginator[ExampleORMModel](
-                session=session,
-                query=select(ExampleORMModel),
-                page_size=self.page_size,
-                pk_field=ExampleORMModel.id,
-            )
-            page = await paginator.get_page(page_index=3)
-            assert page
-            assert len(page) == self.page_size
+class AsyncDeferredJoinPaginatorTestCase(AsyncPaginatorTestCaseBase, IsolatedAsyncioTestCase):
+    def _build_paginator(self, query: Select, session: AsyncSession) -> IAsyncPaginator:
+        return AsyncDeferredJoinPaginator[ExampleORMModel](
+            session=session,
+            query=query,
+            page_size=self.page_size,
+            pk_field=ExampleORMModel.id,
+        )
