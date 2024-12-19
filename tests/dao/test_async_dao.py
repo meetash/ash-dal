@@ -118,6 +118,11 @@ class AsyncDAOFetchAllTestCase(AsyncDAOFetchingTestCaseBase):
         assert results
         assert len(results) == page_size
 
+    async def test_get_page__specification_passed(self):
+        results = await self.dao.get_page(specification={"id": 1})
+        assert results
+        assert len(results) == 1
+
     async def test_get_page__defined_page_index(self):
         page_index = self.faker.pyint(min_value=1, max_value=4)
         page_size = 10

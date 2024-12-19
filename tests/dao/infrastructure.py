@@ -12,8 +12,8 @@ class ExampleORMModel(Base):
     __tablename__ = "example_table"
 
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    first_name: Mapped[str] = mapped_column(String(64))
-    last_name: Mapped[str] = mapped_column(String(64))
+    first_name: Mapped[str] = mapped_column("firstName", String(64))
+    last_name: Mapped[str] = mapped_column("lastName", String(64))
     age: Mapped[int]
     children: Mapped[list["ExampleORMModelChild"]] = relationship(cascade="all, delete-orphan", lazy="noload")
 

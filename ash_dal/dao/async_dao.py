@@ -53,17 +53,23 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         self,
         page_index: int = 0,
         page_size: int | None = None,
+        specification: dict[str, t.Any] | None = None,
     ) -> PaginatorPage[Entity]:
         """
         Fetch a page with entities by page index. If the index is out of range, an empty page will be returned.
+        :param specification: Can be used to filter the entities you want to receive.
         :param page_index: Numeric value. Index starts from 0
         :param page_size: Numeric value. Defines size of the page that will be returned
         :return: An instance of :class:`PaginatorPage` that includes entities.
         """
+        query = select(self.__model__).options(*self.__default_load_options__)
+        if specification:
+            query = query.filter_by(**specification)
+
         async with self.db.session as session:
             paginator = self.__paginator_factory__(
                 session=session,
-                query=select(self.__model__).options(*self.__default_load_options__),
+                query=query,
                 page_size=page_size or self.__default_page_size__,
             )
             page = await paginator.get_page(page_index=page_index)
@@ -141,7 +147,7 @@ class AsyncBaseDAO(BaseDAOMixin[Entity]):
         if not specification:
             raise ValueError("Specification should be passed")
         async with self.db.session as session:
-            result = await session.execute(update(self.__model__).filter_by(**specification), update_data)
+            result = await session.execute(update(self.__model__).filter_by(**specification).values(update_data))
             await session.commit()
             return bool(result.rowcount)  # pyright: ignore
 
